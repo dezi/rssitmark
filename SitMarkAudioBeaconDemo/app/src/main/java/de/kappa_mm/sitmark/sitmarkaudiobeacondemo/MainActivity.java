@@ -1,9 +1,9 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeacondemo;
 
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.widget.TextView;
+import android.graphics.Color;
+import android.os.Bundle;
 
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
 

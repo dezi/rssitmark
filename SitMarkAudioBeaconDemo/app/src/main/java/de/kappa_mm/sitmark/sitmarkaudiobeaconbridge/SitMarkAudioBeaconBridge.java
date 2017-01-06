@@ -40,6 +40,8 @@ public class SitMarkAudioBeaconBridge
         int frameSize = getFrameSize(detectorId);
 
         Log.d(LOGTAG, "initializeBridge: getFrameSize=" + frameSize);
+
+        destroyDetector(detectorId);
     }
 
     public static boolean isDesiredVersion()

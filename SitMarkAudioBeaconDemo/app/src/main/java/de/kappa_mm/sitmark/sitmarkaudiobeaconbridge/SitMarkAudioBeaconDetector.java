@@ -11,6 +11,11 @@ public class SitMarkAudioBeaconDetector
         detectorId = SitMarkAudioBeaconBridge.createDetector();
     }
 
+    public void destroy()
+    {
+        SitMarkAudioBeaconBridge.destroyDetector(detectorId);
+    }
+
     public int getFrameSize()
     {
         return SitMarkAudioBeaconBridge.getFrameSize(detectorId);

@@ -153,7 +153,14 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 {
     SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
 
-    if (detector != NULL) detector->reset();
+    if (detector != NULL)
+    {
+        detector->reset();
+
+        return 0;
+    }
+
+    return -1;
 }
 
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_destroyDetector(
@@ -167,7 +174,11 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
     {
         SitMarkAudioBCDetectorLibrary::destroyInstance(detector, NULL);
         killDetectorApi(detectorId);
+
+        return 0;
     }
+
+    return -1;
 }
 
 //enregion Detector methods.
