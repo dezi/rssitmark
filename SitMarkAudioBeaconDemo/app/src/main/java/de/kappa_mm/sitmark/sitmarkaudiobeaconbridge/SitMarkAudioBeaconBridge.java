@@ -6,6 +6,10 @@ public class SitMarkAudioBeaconBridge
 {
     private static final String LOGTAG = SitMarkAudioBeaconBridge.class.getSimpleName();
 
+    //region Constants.
+
+    private static final String desiredVersion = "Release (Full) - 04.01.2017:0 - Licensed";
+
     private static final String DETECTOR_KEY = "D8F26BEBD8E901A855689B52097914D8";
     private static final double PLAYLENGTH_2_BIT = 0.00264533d;
 
@@ -18,6 +22,8 @@ public class SitMarkAudioBeaconBridge
     private static final int useECC = 0;
     private static final int wmRedundancy = 1;
 
+    //endregion Constants
+
     public static void initializeBridge()
     {
         System.loadLibrary("SitMarkAudio2MDetectorAPI");
@@ -25,20 +31,53 @@ public class SitMarkAudioBeaconBridge
 
         Log.d(LOGTAG, "initializeBridge: SitMarkAudio2MDetectorAPI=" + getVersionString());
 
-        initializeHF(
+        int detectorId = createDetector(
                 nettoMessageLen, minFrequencyHF, maxFrequencyHF,
                 useECC, wmRedundancy, sampleRateInHz,
                 5, DETECTOR_KEY, true, PLAYLENGTH_2_BIT
                 );
+
+        int frameSize = getFrameSize(detectorId);
+
+        Log.d(LOGTAG, "initializeBridge: getFrameSize=" + frameSize);
     }
+
+    public static boolean isDesiredVersion()
+    {
+        String version = getVersionString();
+        return desiredVersion.equals(version);
+    }
+
+    public static int createDetector()
+    {
+        return createDetector(
+                nettoMessageLen, minFrequencyHF, maxFrequencyHF,
+                useECC, wmRedundancy, sampleRateInHz,
+                5, DETECTOR_KEY, true, PLAYLENGTH_2_BIT
+        );
+    }
+
+    //region Native static methods.
 
     public static native String getVersionString();
 
-    public static native int initializeHF(
+    public static native int createDetector(
             int netMessLen, int freqMin, int freqMax,
             int useEcc, int wmRedundancy, int sampleFreq,
             int ringBufferLength,
             String key,
             boolean hfMode,
             double playlength2BitSequence);
+
+    //endregion Native static methods.
+
+    //region Native detector methods.
+
+    public static native int getFrameSize(int detectorId);
+
+    public static native int resetDetector(int detectorId);
+
+    public static native int destroyDetector(int detectorId);
+
+    //endregion Native detector methods.
 }

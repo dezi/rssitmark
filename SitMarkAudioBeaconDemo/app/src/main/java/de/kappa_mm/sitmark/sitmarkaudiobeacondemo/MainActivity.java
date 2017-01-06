@@ -1,5 +1,6 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeacondemo;
 
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -11,7 +12,8 @@ public class MainActivity extends AppCompatActivity
     static
     {
         //
-        // Load SitMarkAudioBeaconBridge library at application startup.
+        // Initialize SitMarkAudioBeaconBridge
+        // library at application startup.
         //
 
         SitMarkAudioBeaconBridge.initializeBridge();
@@ -23,8 +25,15 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Example of a call to a native method
+        //
+        // Get version string and check for desired version.
+        //
+
+        String version = SitMarkAudioBeaconBridge.getVersionString();
+        boolean versionok = SitMarkAudioBeaconBridge.isDesiredVersion();
+
         TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(SitMarkAudioBeaconBridge.getVersionString());
+        tv.setBackgroundColor(versionok ? Color.GREEN : Color.RED);
+        tv.setText(version);
     }
 }

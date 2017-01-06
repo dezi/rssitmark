@@ -4,13 +4,54 @@
 
 #include "SitMarkAudioBCDetectorAPI.h"
 
-extern "C" jstring Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_initializeDecoder(
-        JNIEnv *env,
-        jobject /* this */)
+//region Helper methods.
+
+#define MAXINSTANCES 10
+bool initialized = false;
+SitMarkAudioBCDetectorAPI *instances[ MAXINSTANCES ];
+
+int saveDetectorApi(SitMarkAudioBCDetectorAPI* newDetector)
 {
-    std::string hello = "Hello from C++ (initializeDecoder)";
-    return env->NewStringUTF(hello.c_str());
+    if (! initialized)
+    {
+        for (int inx = 0; inx < MAXINSTANCES; ++inx)
+        {
+            instances[ inx ] = NULL;
+        }
+
+        initialized = true;
+    }
+
+    for (int inx = 0; inx < MAXINSTANCES; ++inx)
+    {
+        if (instances[ inx ] == NULL)
+        {
+            instances[ inx ] = newDetector;
+
+            return inx;
+        }
+    }
+
+    return -1;
 }
+
+SitMarkAudioBCDetectorAPI* findDetectorApi(int detectorId)
+{
+    if (! initialized) return NULL;
+
+    return ((detectorId >= 0) && (detectorId < MAXINSTANCES)) ? instances[ detectorId ] : NULL;
+}
+
+void killDetectorApi(int detectorId)
+{
+    if (! initialized) return;
+
+    if ((detectorId >= 0) && (detectorId < MAXINSTANCES)) instances[ detectorId ] = NULL;
+}
+
+//endregion Helper methods.
+
+//region Static methods.
 
 extern "C" jstring Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getVersionString(
         JNIEnv *env,
@@ -36,7 +77,7 @@ extern "C" jstring Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
     return env->NewStringUTF(resultStr.c_str());
 }
 
-extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_initializeHF(
+extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_createDetector(
         JNIEnv *env,
         jclass type,
         jint netMessLen,
@@ -73,7 +114,7 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
     __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: getFrameSize=", "%d", frameSize);
 
-    return 0;
+    return saveDetectorApi(detector);
 
     double confidence;
     short *values = (short *) malloc(256 * 1024);
@@ -90,3 +131,44 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
     return detectorId;
 }
+
+//endregion Static methods.
+
+//region Detector methods.
+
+extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getFrameSize(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    return (detector != NULL) ? detector->getFrameSize() : -1;
+}
+
+extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_resetDetector(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    if (detector != NULL) detector->reset();
+}
+
+extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_destroyDetector(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    if (detector != NULL)
+    {
+        SitMarkAudioBCDetectorLibrary::destroyInstance(detector, NULL);
+        killDetectorApi(detectorId);
+    }
+}
+
+//enregion Detector methods.
+
