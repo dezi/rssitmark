@@ -17,28 +17,77 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/sample_text"
+            android:id="@+id/version"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:textSize="36sp"/>
+            android:textSize="24sp"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="10dp">
 
-            <Button
-                android:text="Start"
-                android:layout_width="120dp"
-                android:id="@+id/button"
-                android:layout_below="@+id/sample_text"
-                android:layout_alignParentStart="true"
-                android:layout_height="120dp"
-                android:textSize="30sp"/>
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton"/>
 
         </RelativeLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:text="L"
+                android:layout_height="wrap_content"
+                android:id="@+id/lChannel"
+                android:layout_weight="1"
+                android:textSize="24sp"
+                android:gravity="start"
+                android:layout_width="20dp"/>
+
+            <TextView
+                android:text="..."
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/lBeacon"
+                android:layout_weight="1"
+                android:textSize="24sp"
+                android:gravity="end"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:text="R"
+                android:layout_height="wrap_content"
+                android:id="@+id/rChannel"
+                android:layout_weight="1"
+                android:textSize="24sp"
+                android:gravity="start"
+                android:layout_width="20dp"/>
+
+            <TextView
+                android:text="..."
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/rBeacon"
+                android:layout_weight="1"
+                android:textSize="24sp"
+                android:gravity="end"/>
+        </LinearLayout>
+
     </LinearLayout>
 
 </RelativeLayout>
