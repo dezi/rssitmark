@@ -20,4 +20,9 @@ public class SitMarkAudioBeaconDetector
     {
         return SitMarkAudioBeaconBridge.getFrameSize(detectorId);
     }
+
+    public int searchSync(byte[] audioData)
+    {
+        return SitMarkAudioBeaconBridge.searchSync(detectorId, audioData);
+    }
 }

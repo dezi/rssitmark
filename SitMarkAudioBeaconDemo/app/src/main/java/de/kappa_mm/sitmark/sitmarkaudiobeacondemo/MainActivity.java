@@ -4,18 +4,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.ToggleButton;
 import android.widget.TextView;
 import android.graphics.Color;
-import android.view.View;
+import android.os.Handler;
 import android.os.Bundle;
+import android.view.View;
 import android.util.Log;
 
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconCallback;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaconCallback
 {
     private static final String LOGTAG = MainActivity.class.getSimpleName();
-    private static final String VERSION = "07.01.2017:0";
 
+    private final Handler handler = new Handler();
     private SitMarkAudioBeaconListener listener;
 
     static
@@ -34,7 +36,12 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setTitle("RS - Demo - " + VERSION);
+        //
+        // Get bridge version string.
+        //
+
+        String bversion = SitMarkAudioBeaconBridge.getBridgeVersionString();
+        setTitle("RS - Demo - " + bversion);
 
         //
         // Get version string and check for desired version.
@@ -48,10 +55,12 @@ public class MainActivity extends AppCompatActivity
         tv.setText(version);
 
         //
-        // Setup beacon listener.
+        // Setup beacon listener and callback.
         //
 
         listener = new SitMarkAudioBeaconListener();
+        listener.checkAndRequestPermission(this);
+        listener.setCallbackListener(this);
 
         //
         // Setup start/stop button.
@@ -70,7 +79,14 @@ public class MainActivity extends AppCompatActivity
 
                 if (on)
                 {
-                    listener.onStartListening();
+                    if (! listener.checkAndRequestPermission(MainActivity.this))
+                    {
+                        ((ToggleButton) view).setChecked(false);
+                    }
+                    else
+                    {
+                        listener.onStartListening();
+                    }
                 }
                 else
                 {
@@ -79,4 +95,52 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    //region SitMarkAudioBeaconCallback implementation.
+
+    @Override
+    public void onSyncDetected(int channel)
+    {
+        Log.d(LOGTAG, "onSyncDetected: channel=" + channel);
+
+        if (channel == 0)
+        {
+            TextView lSync = (TextView) findViewById(R.id.lSync);
+            lSync.setBackgroundColor(Color.GREEN);
+            lSync.setText("SYNC");
+        }
+
+        if (channel == 1)
+        {
+            TextView rSync = (TextView) findViewById(R.id.rSync);
+            rSync.setBackgroundColor(Color.GREEN);
+            rSync.setText("SYNC");
+        }
+
+        handler.removeCallbacks(resetSyncs);
+        handler.postDelayed(resetSyncs, 1000);
+    }
+
+    @Override
+    public void onBeaconDetected(int channel, int beacon)
+    {
+
+    }
+
+    //endregion SitMarkAudioBeaconCallback implementation.
+
+    private final Runnable resetSyncs = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            TextView lSync = (TextView) findViewById(R.id.lSync);
+            lSync.setBackgroundColor(Color.TRANSPARENT);
+            lSync.setText("");
+
+            TextView rSync = (TextView) findViewById(R.id.rSync);
+            rSync.setBackgroundColor(Color.TRANSPARENT);
+            rSync.setText("");
+        }
+    };
 }
