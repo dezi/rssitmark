@@ -1,10 +1,8 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeacondemo;
 
-import android.content.Context;
-import android.net.DhcpInfo;
-import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ToggleButton;
 import android.widget.TextView;
 import android.graphics.Color;
@@ -13,14 +11,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.HashSet;
-import java.util.Set;
-
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconCallback;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconRemote;
 
 public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaconCallback
 {
@@ -28,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
     private final Handler handler = new Handler();
     private SitMarkAudioBeaconListener listener;
+    private SitMarkAudioBeaconRemote remote;
 
     static
     {
@@ -47,12 +43,31 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        int screenWidth = SitMarkAudioBeaconHelpers.getScreenWidth(this);
+
         //
         // Display current IP address.
         //
 
+        String myIP = SitMarkAudioBeaconHelpers.getWifiIPAddress(this);
         TextView ip = (TextView) findViewById(R.id.ipAddress);
-        ip.setText(getWifiIPAddress());
+        ip.setText(myIP);
+
+        if (screenWidth < 500) ip.setTextSize(ip.getTextSize() / 2f);
+
+        //
+        // Dezi's shortcut setup...
+        //
+
+        String targetIP = null;
+
+        if ((myIP != null) && myIP.equals("192.168.2.107")) targetIP = "192.168.2.101";
+        if ((myIP != null) && myIP.equals("192.168.2.101")) targetIP = "192.168.2.107";
+
+        EditText et = (EditText) findViewById(R.id.targetIP);
+        et.setText(targetIP);
+
+        if (screenWidth < 500) et.setTextSize(et.getTextSize() / 3f);
 
         //
         // Get bridge version string and architecture.
@@ -60,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
         String bversion = SitMarkAudioBeaconBridge.getBridgeVersionString();
         String archcpu = System.getProperty("os.arch");
-        String archlib = findLibrariesArchitecture();
+        String archlib = SitMarkAudioBeaconHelpers.findLibrariesArchitecture();
 
         setTitle("RS " + bversion + " " + archcpu + " " + archlib);
 
@@ -71,9 +86,11 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         String version = SitMarkAudioBeaconBridge.getVersionString();
         boolean versionok = SitMarkAudioBeaconBridge.isDesiredVersion();
 
-        TextView tv = (TextView) findViewById(R.id.version);
-        tv.setBackgroundColor(versionok ? Color.GREEN : Color.RED);
-        tv.setText(version);
+        TextView vtv = (TextView) findViewById(R.id.version);
+        vtv.setBackgroundColor(versionok ? Color.GREEN : Color.RED);
+        vtv.setText(version);
+
+        if (screenWidth < 500) vtv.setTextSize(vtv.getTextSize() / 4f);
 
         //
         // Setup beacon listener and callback.
@@ -84,19 +101,23 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         listener.setCallbackListener(this);
 
         //
-        // Setup start/stop button.
+        // Setup start/stop listener button.
         //
 
-        ToggleButton tb = (ToggleButton) findViewById(R.id.toggleButton);
+        ToggleButton ltb = (ToggleButton) findViewById(R.id.listenToggle);
 
-        tb.setOnClickListener(new View.OnClickListener()
+        ltb.setText("LOCAL MIC AUS");
+        ltb.setTextOff("LOCAL MIC AUS");
+        ltb.setTextOn("LOCAL MIC EIN");
+
+        ltb.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
                 boolean on = ((ToggleButton) view).isChecked();
 
-                Log.d(LOGTAG, "toggleButton=" + on);
+                Log.d(LOGTAG, "listenToggle=" + on);
 
                 if (on)
                 {
@@ -106,6 +127,10 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                     }
                     else
                     {
+                        EditText et = (EditText) findViewById(R.id.targetIP);
+
+                        String editTargetIP = et.getText().toString();
+                        listener.setRemoteListener(editTargetIP);
                         listener.onStartListening();
                     }
                 }
@@ -115,42 +140,199 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 }
             }
         });
+
+        //
+        // Setup remote listener and callback.
+        //
+
+        remote = new SitMarkAudioBeaconRemote();
+        remote.checkAndRequestPermission(this);
+        remote.setCallbackListener(this);
+
+        //
+        // Setup start/stop remote listener button.
+        //
+
+        ToggleButton rtb = (ToggleButton) findViewById(R.id.remoteToggle);
+
+        rtb.setText("REMOTE UDP AUS");
+        rtb.setTextOff("REMOTE UDP AUS");
+        rtb.setTextOn("REMOTE UDP EIN");
+
+        rtb.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                boolean on = ((ToggleButton) view).isChecked();
+
+                Log.d(LOGTAG, "remoteToggle=" + on);
+
+                if (on)
+                {
+                    if (! remote.checkAndRequestPermission(MainActivity.this))
+                    {
+                        ((ToggleButton) view).setChecked(false);
+                    }
+                    else
+                    {
+                        remote.onStartListening();
+                    }
+                }
+                else
+                {
+                    remote.onStopListening();
+                }
+            }
+        });
+
+        //
+        // Adjust all text sizes for smaller screens.
+        //
+
+        if (screenWidth < 500)
+        {
+            TextView tv;
+
+            tv = (TextView) findViewById(R.id.lChannel);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.lSync);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.lBeacon);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.rChannel);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.rSync);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.rBeacon);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remlChannel);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remlSync);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remlBeacon);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remrChannel);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remrSync);
+            tv.setTextSize(tv.getTextSize() / 4f);
+
+            tv = (TextView) findViewById(R.id.remrBeacon);
+            tv.setTextSize(tv.getTextSize() / 4f);
+        }
     }
 
     //region SitMarkAudioBeaconCallback implementation.
 
     @Override
-    public void onSyncDetected(Object instance, int channel)
+    public void onSyncDetected(Object sender, int channel)
     {
-        Log.d(LOGTAG, "onSyncDetected: channel=" + channel);
-
-        if (channel == 0)
+        if (sender == listener)
         {
-            TextView lSync = (TextView) findViewById(R.id.lSync);
-            lSync.setBackgroundColor(Color.GREEN);
-            lSync.setText("SYNC");
+            Log.d(LOGTAG, "onSyncDetected: listener channel=" + channel);
+
+            if (channel == 0)
+            {
+                TextView lSync = (TextView) findViewById(R.id.lSync);
+                lSync.setBackgroundColor(Color.GREEN);
+                lSync.setText("SYNC");
+            }
+
+            if (channel == 1)
+            {
+                TextView rSync = (TextView) findViewById(R.id.rSync);
+                rSync.setBackgroundColor(Color.GREEN);
+                rSync.setText("SYNC");
+            }
+
+            handler.removeCallbacks(resetLocalSyncs);
+            handler.postDelayed(resetLocalSyncs, 1000);
         }
 
-        if (channel == 1)
+        if (sender == remote)
         {
-            TextView rSync = (TextView) findViewById(R.id.rSync);
-            rSync.setBackgroundColor(Color.GREEN);
-            rSync.setText("SYNC");
-        }
+            Log.d(LOGTAG, "onSyncDetected: remote channel=" + channel);
 
-        handler.removeCallbacks(resetSyncs);
-        handler.postDelayed(resetSyncs, 1000);
+            if (channel == 0)
+            {
+                TextView lSync = (TextView) findViewById(R.id.remlSync);
+                lSync.setBackgroundColor(Color.GREEN);
+                lSync.setText("SYNC");
+            }
+
+            if (channel == 1)
+            {
+                TextView rSync = (TextView) findViewById(R.id.remrSync);
+                rSync.setBackgroundColor(Color.GREEN);
+                rSync.setText("SYNC");
+            }
+
+            handler.removeCallbacks(resetRemoteSyncs);
+            handler.postDelayed(resetRemoteSyncs, 1000);
+        }
     }
 
     @Override
-    public void onBeaconDetected(Object instance, int channel, int beacon)
+    public void onBeaconDetected(Object sender, int channel, double confidence, String beacon)
     {
+        if (sender == listener)
+        {
+            Log.d(LOGTAG, "onBeaconDetected: listener channel=" + channel);
 
+            if (channel == 0)
+            {
+                TextView lBeacon = (TextView) findViewById(R.id.lBeacon);
+                lBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
+                lBeacon.setText(beacon);
+            }
+
+            if (channel == 1)
+            {
+                TextView rBeacon = (TextView) findViewById(R.id.rBeacon);
+                rBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
+                rBeacon.setText(beacon);
+            }
+
+            handler.removeCallbacks(resetLocalSyncs);
+            handler.postDelayed(resetLocalSyncs, 1000);
+        }
+
+        if (sender == remote)
+        {
+            Log.d(LOGTAG, "onBeaconDetected: remote channel=" + channel);
+
+            if (channel == 0)
+            {
+                TextView lBeacon = (TextView) findViewById(R.id.remlBeacon);
+                lBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
+                lBeacon.setText(beacon);
+            }
+
+            if (channel == 1)
+            {
+                TextView rBeacon = (TextView) findViewById(R.id.remrBeacon);
+                rBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
+                rBeacon.setText(beacon);
+            }
+
+            handler.removeCallbacks(resetRemoteSyncs);
+            handler.postDelayed(resetRemoteSyncs, 1000);
+        }
     }
 
     //endregion SitMarkAudioBeaconCallback implementation.
 
-    private final Runnable resetSyncs = new Runnable()
+    private final Runnable resetLocalSyncs = new Runnable()
     {
         @Override
         public void run()
@@ -159,68 +341,38 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
             lSync.setBackgroundColor(Color.TRANSPARENT);
             lSync.setText("");
 
+            TextView lBeacon = (TextView) findViewById(R.id.lBeacon);
+            lBeacon.setBackgroundColor(Color.TRANSPARENT);
+
             TextView rSync = (TextView) findViewById(R.id.rSync);
             rSync.setBackgroundColor(Color.TRANSPARENT);
             rSync.setText("");
+
+            TextView rBeacon = (TextView) findViewById(R.id.rBeacon);
+            rBeacon.setBackgroundColor(Color.TRANSPARENT);
         }
     };
 
-    private static String findLibrariesArchitecture()
+    private final Runnable resetRemoteSyncs = new Runnable()
     {
-        String arch = "n.n.";
-
-        try
+        @Override
+        public void run()
         {
-            Set<String> libs = new HashSet<String>();
-            String mapsFile = "/proc/" + android.os.Process.myPid() + "/maps";
-            BufferedReader reader = new BufferedReader(new FileReader(mapsFile));
-            String line;
+            TextView lSync = (TextView) findViewById(R.id.remlSync);
+            lSync.setBackgroundColor(Color.TRANSPARENT);
+            lSync.setText("");
 
-            while ((line = reader.readLine()) != null)
-            {
-                if (line.endsWith(".so") && line.contains("libSitMark"))
-                {
-                    String lib = line.substring(line.lastIndexOf(" ") + 1);
+            TextView lBeacon = (TextView) findViewById(R.id.remlBeacon);
+            lBeacon.setBackgroundColor(Color.TRANSPARENT);
 
-                    if (! libs.contains(lib))
-                    {
-                        Log.d(LOGTAG, "findLibraries: " + lib);
-                        libs.add(lib);
+            TextView rSync = (TextView) findViewById(R.id.remrSync);
+            rSync.setBackgroundColor(Color.TRANSPARENT);
+            rSync.setText("");
 
-                        String[] parts = lib.split("/");
-                        if (parts.length > 2) arch = parts[ parts.length - 2 ];
-                    }
-                }
-            }
+            TextView rBeacon = (TextView) findViewById(R.id.remrBeacon);
+            rBeacon.setBackgroundColor(Color.TRANSPARENT);
         }
-        catch (Exception ignore)
-        {
-        }
+    };
 
-        return arch;
-    }
-
-    public String getWifiIPAddress()
-    {
-        try
-        {
-            WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
-            DhcpInfo dhcpInfo = wifiManager.getDhcpInfo();
-
-            int ip = dhcpInfo.ipAddress;
-
-            if (ip != 0)
-            {
-                return (ip & 0xff) + "." + ((ip >> 8) & 0xff) + "." +
-                        ((ip >> 16) & 0xff) + "." + ((ip >> 24) & 0xff);
-            }
-        }
-        catch (Exception ignore)
-        {
-        }
-
-        return null;
-    }
 
 }

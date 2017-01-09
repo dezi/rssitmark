@@ -208,5 +208,63 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
     return -1;
 }
 
+extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_detectBeacon(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId,
+        jbyteArray audioData)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    if (detector != NULL)
+    {
+        jbyte* audioBytes = env->GetByteArrayElements(audioData, 0);
+        short int* frames = reinterpret_cast<short int*>(audioBytes);
+
+        int iShift = 0;
+        bool bUpdateScores = 1;
+        double confidence = 0.0;
+
+        detector->feedDetector_energyEfficentHF(frames, confidence, iShift, bUpdateScores);
+
+        env->ReleaseByteArrayElements(audioData, audioBytes, JNI_ABORT);
+
+        return confidence;
+    }
+
+    return -1.0;
+}
+
+extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getAccumulatedMessage(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId,
+        jcharArray messageBuffer)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    if (detector != NULL)
+    {
+        jint messagePlusCrcLength = env->GetArrayLength(messageBuffer);
+        jchar *messageChars = env->GetCharArrayElements(messageBuffer, 0);
+
+        char *decodedMessage = new char[messagePlusCrcLength +  1]; //net message + crc + null terminator
+
+        bool correct = false; // android requires a reference, rvalues are not allowed
+        double score = detector->getAccumulatedMessage(decodedMessage, correct);
+
+        for (int i = 0; i < messagePlusCrcLength; i++)
+        {
+            messageChars[i] = decodedMessage[i];
+        }
+
+        env->ReleaseCharArrayElements(messageBuffer, messageChars, JNI_COMMIT);
+        delete[] decodedMessage;
+        return score;
+    }
+
+    return -1.0;
+}
+
 //enregion Detector methods.
 

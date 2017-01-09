@@ -25,6 +25,7 @@ public class SitMarkAudioBeaconListener
     private DatagramPacket datagramPacket;
     private RecorderThread audioThread;
     private AudioRecord audioRecord;
+    private String remoteIPAddress;
     private Handler handler;
 
     private boolean isListening;
@@ -60,6 +61,11 @@ public class SitMarkAudioBeaconListener
     public void setCallbackListener(SitMarkAudioBeaconCallback callback)
     {
         this.callback = callback;
+    }
+
+    public void setRemoteListener(String remoteIPAddress)
+    {
+        this.remoteIPAddress = remoteIPAddress;
     }
 
     public void onStartListening()
@@ -110,19 +116,6 @@ public class SitMarkAudioBeaconListener
                 numChannels = 2;
             }
 
-            try
-            {
-                datagramSocket = new DatagramSocket();
-                datagramPacket = new DatagramPacket(new byte[ 0 ], 0);
-
-                datagramPacket.setAddress(InetAddress.getByName("192.168.1.168"));
-                datagramPacket.setPort(47474);
-            }
-            catch (Exception ignore)
-            {
-                ignore.printStackTrace();
-            }
-
             detectors = new SitMarkAudioBeaconDetector[ numChannels ];
 
             for (int inx = 0; inx < numChannels; inx++)
@@ -131,6 +124,25 @@ public class SitMarkAudioBeaconListener
             }
 
             frameSize = detectors[ 0 ].getFrameSize();
+
+            if ((remoteIPAddress != null) && ! remoteIPAddress.isEmpty())
+            {
+                try
+                {
+                    datagramSocket = new DatagramSocket();
+                    datagramPacket = new DatagramPacket(new byte[0], 0);
+
+                    datagramPacket.setAddress(InetAddress.getByName(remoteIPAddress));
+                    datagramPacket.setPort(47474);
+                }
+                catch (Exception ignore)
+                {
+                    datagramSocket = null;
+                    datagramPacket = null;
+
+                    ignore.printStackTrace();
+                }
+            }
 
             audioRecord.startRecording();
 
@@ -220,7 +232,8 @@ public class SitMarkAudioBeaconListener
                     try
                     {
                         datagramSocket.send(datagramPacket);
-                        Log.d(LOGTAG, "RecorderThread: send...");
+
+                        Log.d(LOGTAG, "RecorderThread: send length=" + datagramPacket.getLength());
                     }
                     catch (Exception ex)
                     {
@@ -256,6 +269,59 @@ public class SitMarkAudioBeaconListener
                                 public void run()
                                 {
                                     callback.onSyncDetected(SitMarkAudioBeaconListener.this, cbchannel);
+                                }
+                            });
+                        }
+
+                        //
+                        // Shift down current buffer.
+                        //
+
+                        int newpos = 0;
+                        int oldpos = sync * 2;
+
+                        while (oldpos < cbuffer.length)
+                        {
+                            cbuffer[ newpos++ ] = cbuffer[ oldpos++ ];
+                            cbuffer[ newpos++ ] = cbuffer[ oldpos++ ];
+                        }
+
+                        //
+                        // Complete buffer from actual frame.
+                        //
+
+                        sinx = channel * 2;
+
+                        while (newpos < cbuffer.length)
+                        {
+                            cbuffer[ newpos++ ] = thisBuffer[ sinx ];
+                            cbuffer[ newpos++ ] = thisBuffer[ sinx + 1 ];
+
+                            sinx += (numChannels << 1);
+                        }
+
+                        double confidence = detectors[ channel ].detectBeacon(cbuffer);
+                        Log.d(LOGTAG, "RecorderThread: channel=" + channel + " confidence=" + confidence);
+
+                        char[] message = new char[ 32 ];
+
+                        double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
+                        String beacon = SitMarkAudioBeaconBridge.getDecodedBeacon(message);
+
+                        Log.d(LOGTAG, "RecorderThread: channel=" + channel + " beacon=" + beacon);
+
+                        if (callback != null)
+                        {
+                            final int cbchannel = channel;
+                            final String cbbeacon = beacon;
+                            final double cbconfidence = acconfidence;
+
+                            handler.post(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    callback.onBeaconDetected(SitMarkAudioBeaconListener.this, cbchannel, cbconfidence, cbbeacon);
                                 }
                             });
                         }

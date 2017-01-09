@@ -5,7 +5,7 @@ import android.util.Log;
 public class SitMarkAudioBeaconBridge
 {
     private static final String LOGTAG = SitMarkAudioBeaconBridge.class.getSimpleName();
-    private static final String VERSION = "07.01.2017:0";
+    private static final String VERSION = "09.01.2017:0";
 
     //region Constants.
 
@@ -70,6 +70,18 @@ public class SitMarkAudioBeaconBridge
         );
     }
 
+    public static String getDecodedBeacon(char[] messageBuffer)
+    {
+        String idBinary = "";
+
+        for (int inx = 0; inx < nettoMessageLen; inx++)
+        {
+            idBinary += Character.getNumericValue(messageBuffer[ inx ]);
+        }
+
+        return idBinary;
+    }
+
     //region Native static methods.
 
     public static native String getVersionString();
@@ -93,6 +105,10 @@ public class SitMarkAudioBeaconBridge
     public static native int destroyDetector(int detectorId);
 
     public static native int searchSync(int detectorId, byte[] audioData);
+
+    public static native double detectBeacon(int detectorId, byte[] audioData);
+
+    public static native double getAccumulatedMessage(int detectorId, char[] messageBuffer);
 
     //endregion Native detector methods.
 }

@@ -25,4 +25,14 @@ public class SitMarkAudioBeaconDetector
     {
         return SitMarkAudioBeaconBridge.searchSync(detectorId, audioData);
     }
+
+    public double detectBeacon(byte[] audioData)
+    {
+        return SitMarkAudioBeaconBridge.detectBeacon(detectorId, audioData);
+    }
+
+    public double getAccumulatedMessage(char[] message)
+    {
+        return SitMarkAudioBeaconBridge.getAccumulatedMessage(detectorId, message);
+    }
 }
