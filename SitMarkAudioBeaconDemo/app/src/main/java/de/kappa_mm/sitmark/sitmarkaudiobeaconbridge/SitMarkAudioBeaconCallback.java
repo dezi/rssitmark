@@ -2,7 +2,7 @@ package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
 public interface SitMarkAudioBeaconCallback
 {
-    void onSyncDetected(int channel);
+    void onSyncDetected(Object instance, int channel);
 
-    void onBeaconDetected(int channel, int beacon);
+    void onBeaconDetected(Object instance, int channel, int beacon);
 }

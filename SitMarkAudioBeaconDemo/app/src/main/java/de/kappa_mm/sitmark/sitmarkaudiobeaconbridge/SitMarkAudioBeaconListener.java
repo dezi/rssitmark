@@ -1,18 +1,19 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.app.ActivityCompat;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.app.Activity;
+import android.Manifest;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 public class SitMarkAudioBeaconListener
 {
@@ -20,6 +21,8 @@ public class SitMarkAudioBeaconListener
 
     private SitMarkAudioBeaconCallback callback;
 
+    private DatagramSocket datagramSocket;
+    private DatagramPacket datagramPacket;
     private RecorderThread audioThread;
     private AudioRecord audioRecord;
     private Handler handler;
@@ -107,6 +110,19 @@ public class SitMarkAudioBeaconListener
                 numChannels = 2;
             }
 
+            try
+            {
+                datagramSocket = new DatagramSocket();
+                datagramPacket = new DatagramPacket(new byte[ 0 ], 0);
+
+                datagramPacket.setAddress(InetAddress.getByName("192.168.1.168"));
+                datagramPacket.setPort(47474);
+            }
+            catch (Exception ignore)
+            {
+                ignore.printStackTrace();
+            }
+
             detectors = new SitMarkAudioBeaconDetector[ numChannels ];
 
             for (int inx = 0; inx < numChannels; inx++)
@@ -150,6 +166,13 @@ public class SitMarkAudioBeaconListener
                 audioRecord = null;
             }
 
+            if (datagramSocket != null)
+            {
+                datagramSocket.close();
+                datagramSocket = null;
+                datagramPacket = null;
+            }
+
             isListening = false;
         }
     }
@@ -190,6 +213,21 @@ public class SitMarkAudioBeaconListener
                 int samplesRead = audioRecord.read(thisBuffer, 0, thisBuffer.length);
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
 
+                if (datagramSocket != null)
+                {
+                    datagramPacket.setData(thisBuffer);
+
+                    try
+                    {
+                        datagramSocket.send(datagramPacket);
+                        Log.d(LOGTAG, "RecorderThread: send...");
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                    }
+                }
+
                 for (int channel = 0; channel < numChannels; channel++)
                 {
                     int sinx = channel * 2;
@@ -217,7 +255,7 @@ public class SitMarkAudioBeaconListener
                                 @Override
                                 public void run()
                                 {
-                                    callback.onSyncDetected(cbchannel);
+                                    callback.onSyncDetected(SitMarkAudioBeaconListener.this, cbchannel);
                                 }
                             });
                         }
