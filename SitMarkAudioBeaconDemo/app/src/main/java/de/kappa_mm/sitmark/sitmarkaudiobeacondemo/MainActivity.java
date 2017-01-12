@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
         String targetIP = null;
 
-        if ((myIP != null) && myIP.equals("192.168.2.107")) targetIP = "192.168.2.101";
-        if ((myIP != null) && myIP.equals("192.168.2.101")) targetIP = "192.168.2.107";
+        if ((myIP != null) && myIP.equals("192.168.2.102")) targetIP = "192.168.2.103";
+        if ((myIP != null) && myIP.equals("192.168.2.103")) targetIP = "192.168.2.102";
 
         EditText et = (EditText) findViewById(R.id.targetIP);
         et.setText(targetIP);

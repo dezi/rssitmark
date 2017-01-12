@@ -1,5 +1,9 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
+import android.media.audiofx.AcousticEchoCanceler;
+import android.media.audiofx.AutomaticGainControl;
+import android.media.audiofx.NoiseSuppressor;
+
 import android.support.v4.content.ContextCompat;
 import android.support.v4.app.ActivityCompat;
 import android.content.pm.PackageManager;
@@ -93,7 +97,7 @@ public class SitMarkAudioBeaconListener
             if (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED)
             {
                 //
-                // dual channel not available -> use mono instead
+                // Dual channel not available -> use mono instead.
                 //
                 // NOTE:
                 //
@@ -115,6 +119,15 @@ public class SitMarkAudioBeaconListener
             {
                 numChannels = 2;
             }
+
+            //AutomaticGainControl agc = AutomaticGainControl.create(audioRecord.getAudioSessionId());
+            //Log.d(LOGTAG, "AutomaticGainControl=" + agc.getEnabled());
+
+            //AcousticEchoCanceler aec = AcousticEchoCanceler.create(audioRecord.getAudioSessionId());
+            //Log.d(LOGTAG, "AcousticEchoCanceler=" + aec.getEnabled());
+
+            //NoiseSuppressor ns = NoiseSuppressor.create(audioRecord.getAudioSessionId());
+            //Log.d(LOGTAG, "NoiseSuppressor=" + ns.getEnabled());
 
             detectors = new SitMarkAudioBeaconDetector[ numChannels ];
 
@@ -202,9 +215,9 @@ public class SitMarkAudioBeaconListener
 
             //
             // We have always two buffers filled with samples.
-            // Only the older buffer is check for sync. If a
+            // Only the older buffer is checked for sync. If a
             // sync is found, the buffer frame is completed
-            // from the current buffer,
+            // from the current buffer.
             //
 
             byte[] lastBuffer = new byte[ frameSize * 2 * numChannels ];
@@ -225,6 +238,15 @@ public class SitMarkAudioBeaconListener
                 int samplesRead = audioRecord.read(thisBuffer, 0, thisBuffer.length);
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
 
+                //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 0);
+                //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 3.0f);
+
+                int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
+                int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);
+                int HFsamp = SitMarkAudioBeaconHelpers.getHFSamples(thisBuffer, numChannels);
+
+                Log.d(LOGTAG, "RecorderThread: avgAmp=" + avgAmp + " maxAmp=" + maxAmp + " HFsamp=" + HFsamp);
+
                 if (datagramSocket != null)
                 {
                     datagramPacket.setData(thisBuffer);
@@ -233,7 +255,7 @@ public class SitMarkAudioBeaconListener
                     {
                         datagramSocket.send(datagramPacket);
 
-                        Log.d(LOGTAG, "RecorderThread: send length=" + datagramPacket.getLength());
+                        //Log.d(LOGTAG, "RecorderThread: send length=" + datagramPacket.getLength());
                     }
                     catch (Exception ex)
                     {
@@ -259,6 +281,7 @@ public class SitMarkAudioBeaconListener
                     {
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " sync=" + sync);
 
+                        /*
                         if (callback != null)
                         {
                             final int cbchannel = channel;
@@ -300,11 +323,19 @@ public class SitMarkAudioBeaconListener
                             sinx += (numChannels << 1);
                         }
 
+                        //
+                        // Detect sound beacon from now complete frame.
+                        //
+
                         double confidence = detectors[ channel ].detectBeacon(cbuffer);
+
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " confidence=" + confidence);
 
-                        char[] message = new char[ 32 ];
+                        //
+                        // Read value of sound beacon from detector.
+                        //
 
+                        char[] message = new char[ 32 ];
                         double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
                         String beacon = SitMarkAudioBeaconBridge.getDecodedBeacon(message);
 
@@ -325,6 +356,8 @@ public class SitMarkAudioBeaconListener
                                 }
                             });
                         }
+
+                        */
                     }
                 }
             }

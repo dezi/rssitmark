@@ -155,7 +155,7 @@ public class SitMarkAudioBeaconRemote
                     byte[] data = datagramPacket.getData();
                     System.arraycopy(data, 0, thisBuffer, 0, samplesRead);
 
-                    Log.d(LOGTAG, "RemoteThread: receive length=" + samplesRead);
+                    //Log.d(LOGTAG, "RemoteThread: receive length=" + samplesRead);
 
                     for (int channel = 0; channel < numChannels; channel++)
                     {

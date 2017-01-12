@@ -41,18 +41,6 @@ public class SitMarkAudioBeaconBridge
         System.loadLibrary("SitMarkAudioBeaconBridge");
 
         Log.d(LOGTAG, "initializeBridge: SitMarkAudio2MDetectorAPI=" + getVersionString());
-
-        int detectorId = createDetector(
-                nettoMessageLen, minFrequencyHF, maxFrequencyHF,
-                useECC, wmRedundancy, sampleRateInHz,
-                5, DETECTOR_KEY, true, PLAYLENGTH_2_BIT
-                );
-
-        int frameSize = getFrameSize(detectorId);
-
-        Log.d(LOGTAG, "initializeBridge: getFrameSize=" + frameSize);
-
-        destroyDetector(detectorId);
     }
 
     public static boolean isDesiredVersion()
