@@ -100,36 +100,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
             key, NULL, hfMode, playlength2BitSequence
     );
 
-    __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: createInstance=", "%ld", (long) detector);
-
     detector->initialize();
-
-    __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: initialize=", "%ld", (long) detector);
-
     detector->reset();
 
-    __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: reset=", "%ld", (long) detector);
-
-    int frameSize = detector->getFrameSize();
-
-    __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: getFrameSize=", "%d", frameSize);
-
     return saveDetectorApi(detector);
-
-    double confidence;
-    short *values = (short *) malloc(256 * 1024);
-
-    int ml = detector->feedDetector(values, confidence);
-
-    int detectorId = 0;
-
-    //detectorId = saveDetectorApi(detector);
-
-    __android_log_print(ANDROID_LOG_DEBUG, "KappaSitMarkAudioDetector: initializeHF=", "%d => %lx ML=%d", detectorId, (long) detector, ml);
-
-    env->ReleaseStringUTFChars(key_, key);
-
-    return detectorId;
 }
 
 //endregion Static methods.
@@ -248,7 +222,7 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
         jint messagePlusCrcLength = env->GetArrayLength(messageBuffer);
         jchar *messageChars = env->GetCharArrayElements(messageBuffer, 0);
 
-        char *decodedMessage = new char[messagePlusCrcLength +  1]; //net message + crc + null terminator
+        char decodedMessage[ 128 ];
 
         bool correct = false; // android requires a reference, rvalues are not allowed
         double score = detector->getAccumulatedMessage(decodedMessage, correct);
@@ -259,7 +233,7 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
         }
 
         env->ReleaseCharArrayElements(messageBuffer, messageChars, JNI_COMMIT);
-        delete[] decodedMessage;
+
         return score;
     }
 

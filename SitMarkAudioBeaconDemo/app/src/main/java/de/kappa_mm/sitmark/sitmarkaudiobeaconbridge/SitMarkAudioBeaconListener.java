@@ -281,7 +281,6 @@ public class SitMarkAudioBeaconListener
                     {
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " sync=" + sync);
 
-                        /*
                         if (callback != null)
                         {
                             final int cbchannel = channel;
@@ -356,8 +355,6 @@ public class SitMarkAudioBeaconListener
                                 }
                             });
                         }
-
-                        */
                     }
                 }
             }
