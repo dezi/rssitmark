@@ -112,13 +112,9 @@ public class SitMarkAudioBeaconListener
                         AudioFormat.ENCODING_PCM_16BIT, 2 * sampleRateInHz);
 
                 Log.d(LOGTAG, "openMics MONO=" + audioRecord.getState());
+            }
 
-                numChannels = 1;
-            }
-            else
-            {
-                numChannels = 2;
-            }
+            numChannels = audioRecord.getChannelCount();
 
             //AutomaticGainControl agc = AutomaticGainControl.create(audioRecord.getAudioSessionId());
             //Log.d(LOGTAG, "AutomaticGainControl=" + agc.getEnabled());
@@ -242,8 +238,8 @@ public class SitMarkAudioBeaconListener
                 int samplesRead = audioRecord.read(thisBuffer, 0, thisBuffer.length);
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
 
-                //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 0);
-                //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 3.0f);
+                //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 2);
+                //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 10.0f);
 
                 int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
                 int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);
