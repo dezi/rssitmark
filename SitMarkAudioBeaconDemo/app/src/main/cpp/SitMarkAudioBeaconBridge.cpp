@@ -165,12 +165,12 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
     if (detector != NULL)
     {
-        jbyte* audioBytes = env->GetByteArrayElements(audioData, 0);
-        short int* frames = reinterpret_cast<short int*>(audioBytes);
-
         int iShift = 0;
         bool bUpdateScores = 0;
         double confidence = 0.0;
+
+        jbyte* audioBytes = env->GetByteArrayElements(audioData, NULL);
+        short int* frames = reinterpret_cast<short int*>(audioBytes);
 
         detector->feedDetector_energyEfficentHF(frames, confidence, iShift, bUpdateScores);
 
@@ -192,7 +192,7 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
 
     if (detector != NULL)
     {
-        jbyte* audioBytes = env->GetByteArrayElements(audioData, 0);
+        jbyte* audioBytes = env->GetByteArrayElements(audioData, NULL);
         short int* frames = reinterpret_cast<short int*>(audioBytes);
 
         int iShift = 0;
@@ -220,7 +220,7 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
     if (detector != NULL)
     {
         jint messagePlusCrcLength = env->GetArrayLength(messageBuffer);
-        jchar *messageChars = env->GetCharArrayElements(messageBuffer, 0);
+        jchar *messageChars = env->GetCharArrayElements(messageBuffer, NULL);
 
         char decodedMessage[ 128 ];
 
@@ -233,6 +233,7 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
         }
 
         env->ReleaseCharArrayElements(messageBuffer, messageChars, JNI_COMMIT);
+        env->ReleaseCharArrayElements(messageBuffer, messageChars, JNI_ABORT);
 
         return score;
     }

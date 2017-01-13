@@ -225,8 +225,12 @@ public class SitMarkAudioBeaconListener
 
             byte[] cbuffer = new byte[ frameSize * 2 ];
 
+            long collect = 0;
+
             while (isRunning)
             {
+                if ((collect++ % 100) == 0) Runtime.getRuntime().gc();
+
                 //
                 // Switch buffers.
                 //
@@ -243,7 +247,7 @@ public class SitMarkAudioBeaconListener
 
                 int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
                 int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);
-                int HFsamp = SitMarkAudioBeaconHelpers.getHFSamples(thisBuffer, numChannels);
+                int HFsamp = SitMarkAudioBeaconHelpers.getNUMHFSamples(thisBuffer, numChannels);
 
                 Log.d(LOGTAG, "RecorderThread: avgAmp=" + avgAmp + " maxAmp=" + maxAmp + " HFsamp=" + HFsamp);
 

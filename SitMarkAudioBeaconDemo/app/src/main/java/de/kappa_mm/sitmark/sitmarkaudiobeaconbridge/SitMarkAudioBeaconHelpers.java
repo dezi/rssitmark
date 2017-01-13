@@ -143,7 +143,7 @@ public class SitMarkAudioBeaconHelpers
         return max;
     }
 
-    public static int getHFSamples(byte[] audio, int numChannels)
+    public static int getNUMHFSamples(byte[] audio, int numChannels)
     {
         int[] hfcount = new int[ 2 ];
 
