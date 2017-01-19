@@ -239,7 +239,7 @@ public class SitMarkAudioBeaconListener
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
 
                 //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 2);
-                //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 10.0f);
+                //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 0.1f);
 
                 int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
                 int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);

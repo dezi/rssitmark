@@ -9,7 +9,7 @@ public class SitMarkAudioBeaconBridge
 
     //region Constants.
 
-    private static final String desiredVersion = "Release (Full) - 04.01.2017:0 - Licensed";
+    private static final String desiredVersion = "Release (Full) - 18.01.2017:0 - Licensed";
 
     private static final String DETECTOR_KEY = "D8F26BEBD8E901A855689B52097914D8";
     private static final double PLAYLENGTH_2_BIT = 0.00264533d;

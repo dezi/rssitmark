@@ -44,21 +44,28 @@
                 android:contentDescription="Target IP"
                 android:hint="Target IP"
                 android:inputType="text"/>
+
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:layout_marginTop="10dp">
+            android:layout_height="65dp">
 
             <ToggleButton
                 android:text="ToggleButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/listenToggle"/>
+                android:id="@+id/listenToggle"
+                android:layout_weight="1" />
 
-        </RelativeLayout>
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_height="wrap_content"
+                android:id="@+id/timerButton"
+                android:layout_weight="1"
+                android:layout_width="match_parent" />
+        </LinearLayout>
 
         <LinearLayout
             android:orientation="horizontal"

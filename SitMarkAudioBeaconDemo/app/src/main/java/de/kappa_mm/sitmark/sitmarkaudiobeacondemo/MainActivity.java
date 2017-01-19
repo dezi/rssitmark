@@ -1,5 +1,6 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeacondemo;
 
+import android.content.pm.ActivityInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -25,6 +26,13 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
     private SitMarkAudioBeaconListener listener;
     private SitMarkAudioBeaconRemote remote;
 
+    private long stopTime;
+
+    private int syncFoundLeft;
+    private int syncFoundRight;
+    private int codeFoundLeft;
+    private int codeFoundRight;
+
     static
     {
         //
@@ -42,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         setContentView(R.layout.activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         int screenWidth = SitMarkAudioBeaconHelpers.getScreenWidth(this);
 
@@ -60,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         //
 
         String targetIP = null;
+
 
         if ((myIP != null) && myIP.equals("192.168.2.102")) targetIP = "192.168.2.103";
         if ((myIP != null) && myIP.equals("192.168.2.103")) targetIP = "192.168.2.102";
@@ -106,9 +116,9 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
         ToggleButton ltb = (ToggleButton) findViewById(R.id.listenToggle);
 
-        ltb.setText("LOCAL MIC AUS");
-        ltb.setTextOff("LOCAL MIC AUS");
-        ltb.setTextOn("LOCAL MIC EIN");
+        ltb.setText("MIC AUS");
+        ltb.setTextOff("MIC AUS");
+        ltb.setTextOn("MIC EIN");
 
         ltb.setOnClickListener(new View.OnClickListener()
         {
@@ -127,11 +137,72 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                     }
                     else
                     {
+                        syncFoundLeft = 0;
+                        syncFoundRight = 0;
+                        codeFoundLeft = 0;
+                        codeFoundRight = 0;
+
+                        stopTime = 0;
+
+                        displayCounts();
+
                         EditText et = (EditText) findViewById(R.id.targetIP);
 
                         String editTargetIP = et.getText().toString();
                         listener.setRemoteListener(editTargetIP);
                         listener.onStartListening();
+                    }
+                }
+                else
+                {
+                    listener.onStopListening();
+                }
+            }
+        });
+
+        //
+        // Setup timer listener button.
+        //
+
+        ToggleButton ttb = (ToggleButton) findViewById(R.id.timerButton);
+
+        ttb.setText("TIMER AUS");
+        ttb.setTextOff("TIMER AUS");
+        ttb.setTextOn("TIMER EIN");
+
+        ttb.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                boolean on = ((ToggleButton) view).isChecked();
+
+                Log.d(LOGTAG, "timerToggle=" + on);
+
+                if (on)
+                {
+                    if (! listener.checkAndRequestPermission(MainActivity.this))
+                    {
+                        ((ToggleButton) view).setChecked(false);
+                    }
+                    else
+                    {
+                        syncFoundLeft = 0;
+                        syncFoundRight = 0;
+                        codeFoundLeft = 0;
+                        codeFoundRight = 0;
+
+                        stopTime = (System.currentTimeMillis() / 1000) + 60;
+
+                        displayCounts();
+
+                        EditText et = (EditText) findViewById(R.id.targetIP);
+
+                        String editTargetIP = et.getText().toString();
+                        listener.setRemoteListener(editTargetIP);
+                        listener.onStartListening();
+
+                        handler.post(timerCheck);
                     }
                 }
                 else
@@ -195,40 +266,40 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
             TextView tv;
 
             tv = (TextView) findViewById(R.id.lChannel);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.lSync);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.lBeacon);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.rChannel);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.rSync);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.rBeacon);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remlChannel);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remlSync);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remlBeacon);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remrChannel);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remrSync);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
 
             tv = (TextView) findViewById(R.id.remrBeacon);
-            tv.setTextSize(tv.getTextSize() / 4f);
+            tv.setTextSize(tv.getTextSize() / 5f);
         }
     }
 
@@ -246,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 TextView lSync = (TextView) findViewById(R.id.lSync);
                 lSync.setBackgroundColor(Color.GREEN);
                 lSync.setText("SYNC");
+                syncFoundLeft++;
             }
 
             if (channel == 1)
@@ -253,7 +325,10 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 TextView rSync = (TextView) findViewById(R.id.rSync);
                 rSync.setBackgroundColor(Color.GREEN);
                 rSync.setText("SYNC");
+                syncFoundRight++;
             }
+
+            displayCounts();
 
             handler.removeCallbacks(resetLocalSyncs);
             handler.postDelayed(resetLocalSyncs, 1000);
@@ -294,6 +369,8 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 TextView lBeacon = (TextView) findViewById(R.id.lBeacon);
                 lBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
                 lBeacon.setText(beacon);
+
+                if (confidence >= 0.0) codeFoundLeft++;
             }
 
             if (channel == 1)
@@ -301,7 +378,11 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 TextView rBeacon = (TextView) findViewById(R.id.rBeacon);
                 rBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
                 rBeacon.setText(beacon);
+
+                if (confidence >= 0.0) codeFoundRight++;
             }
+
+            displayCounts();
 
             handler.removeCallbacks(resetLocalSyncs);
             handler.postDelayed(resetLocalSyncs, 1000);
@@ -331,6 +412,45 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
     }
 
     //endregion SitMarkAudioBeaconCallback implementation.
+
+    private void displayCounts()
+    {
+        TextView tv;
+
+        tv = (TextView) findViewById(R.id.lChannel);
+        tv.setText("L:" + syncFoundLeft + ":" + codeFoundLeft);
+
+        tv = (TextView) findViewById(R.id.rChannel);
+        tv.setText("L:" + syncFoundRight + ":" + codeFoundRight);
+    }
+
+    private final Runnable timerCheck = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            if (stopTime > 0)
+            {
+                long currentTime = System.currentTimeMillis() / 1000;
+                int rest = (int) (stopTime - currentTime);
+
+                ToggleButton ttb = (ToggleButton) findViewById(R.id.timerButton);
+
+                if (currentTime >= stopTime)
+                {
+                    ttb.setChecked(false);
+
+                    listener.onStopListening();
+                }
+                else
+                {
+                    ttb.setText("TIMER " + rest);
+
+                    handler.postDelayed(timerCheck, 500);
+                }
+            }
+        }
+    };
 
     private final Runnable resetLocalSyncs = new Runnable()
     {
