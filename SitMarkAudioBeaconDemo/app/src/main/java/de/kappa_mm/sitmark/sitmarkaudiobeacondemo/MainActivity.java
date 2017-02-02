@@ -18,7 +18,9 @@ import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconRemote;
 
-// Hallo bollo
+//
+// Hallo bollo! Version vom 02.02.2017 15:40...
+//
 
 public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaconCallback
 {
