@@ -18,6 +18,8 @@ import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconRemote;
 
+// Hallo bollo
+
 public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaconCallback
 {
     private static final String LOGTAG = MainActivity.class.getSimpleName();
