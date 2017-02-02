@@ -225,7 +225,7 @@ public class SitMarkAudioBeaconListener
 
             while (isRunning)
             {
-                //if ((collect++ % 100) == 0) Runtime.getRuntime().gc();
+                if ((collect++ % 100) == 0) Runtime.getRuntime().gc();
 
                 //
                 // Switch buffers.
@@ -275,9 +275,7 @@ public class SitMarkAudioBeaconListener
                         sinx += (numChannels << 1);
                     }
 
-                    Log.d(LOGTAG, "RecorderThread: searchSync=in");
                     int sync = detectors[ channel ].searchSync(cbuffer);
-                    Log.d(LOGTAG, "RecorderThread: searchSync=out");
 
                     if (sync > 0)
                     {
@@ -328,9 +326,7 @@ public class SitMarkAudioBeaconListener
                         // Detect sound beacon from now complete frame.
                         //
 
-                        Log.d(LOGTAG, "RecorderThread: detectBeacon=in");
                         double confidence = detectors[ channel ].detectBeacon(cbuffer);
-                        Log.d(LOGTAG, "RecorderThread: detectBeacon=out");
 
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " confidence=" + confidence);
 
@@ -339,9 +335,7 @@ public class SitMarkAudioBeaconListener
                         //
 
                         char[] message = new char[ 32 ];
-                        Log.d(LOGTAG, "RecorderThread: getAccumulatedMessage=in");
                         double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
-                        Log.d(LOGTAG, "RecorderThread: getAccumulatedMessage=out");
                         String beacon = SitMarkAudioBeaconBridge.getDecodedBeacon(message);
 
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " beacon=" + beacon);
