@@ -5,7 +5,7 @@ import android.util.Log;
 public class SitMarkAudioBeaconBridge
 {
     private static final String LOGTAG = SitMarkAudioBeaconBridge.class.getSimpleName();
-    private static final String VERSION = "02.02.2017:0";
+    private static final String VERSION = "03.02.2017:0";
 
     //region Constants.
 
