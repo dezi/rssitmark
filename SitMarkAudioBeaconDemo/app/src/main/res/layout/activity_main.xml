@@ -23,34 +23,83 @@
             android:gravity="center_horizontal"
             android:textSize="24sp"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/model"
+            android:textSize="24sp"
+            android:gravity="center_horizontal"/>
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                >
+
+                <RadioButton
+                    android:text="UM 1.5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/um1"
+                    android:layout_weight="1"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:text="UM 3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/um3"
+                    android:layout_weight="1"/>
+
+                <RadioButton
+                    android:text="UM 5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/um5"
+                    android:layout_weight="1"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                >
+
+                <RadioButton
+                    android:text="OM 1.5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/om1"
+                    android:layout_weight="1"/>
+
+                <RadioButton
+                    android:text="OM 3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/om3"
+                    android:layout_weight="1"/>
+
+                <RadioButton
+                    android:text="OM 5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/om5"
+                    android:layout_weight="1"/>
+            </LinearLayout>
+
+        </RadioGroup>
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/ipAddress"
-                android:gravity="center_horizontal"
-                android:layout_weight="1"/>
-
-            <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:id="@+id/targetIP"
-                android:layout_weight="1"
-                android:contentDescription="Target IP"
-                android:hint="Target IP"
-                android:inputType="text"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="65dp">
 
             <ToggleButton
                 android:text="ToggleButton"
@@ -80,7 +129,7 @@
                 android:layout_weight="1"
                 android:textSize="24sp"
                 android:gravity="start"
-                android:layout_width="20dp"/>
+                android:layout_width="wrap_content"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -112,9 +161,9 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/rChannel"
                 android:layout_weight="1"
-                android:textSize="24sp"
                 android:gravity="start"
-                android:layout_width="20dp"/>
+                android:layout_width="wrap_content"
+                android:textSize="24sp"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -129,84 +178,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/rBeacon"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="end"/>
-        </LinearLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ToggleButton
-                android:text="ToggleButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/remoteToggle"/>
-        </RelativeLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
-
-            <TextView
-                android:text="L"
-                android:layout_height="wrap_content"
-                android:id="@+id/remlChannel"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="start"
-                android:layout_width="20dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/remlSync"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="center_horizontal"/>
-
-            <TextView
-                android:text="..."
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/remlBeacon"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="end"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
-
-            <TextView
-                android:text="R"
-                android:layout_height="wrap_content"
-                android:id="@+id/remrChannel"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="start"
-                android:layout_width="20dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/remrSync"
-                android:layout_weight="1"
-                android:textSize="24sp"
-                android:gravity="center_horizontal"/>
-
-            <TextView
-                android:text="..."
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/remrBeacon"
                 android:layout_weight="1"
                 android:textSize="24sp"
                 android:gravity="end"/>

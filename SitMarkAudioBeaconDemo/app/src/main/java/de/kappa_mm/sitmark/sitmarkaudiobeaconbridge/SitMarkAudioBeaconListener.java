@@ -4,6 +4,7 @@ import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.NoiseSuppressor;
 
+import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.app.ActivityCompat;
 import android.content.pm.PackageManager;
@@ -15,6 +16,8 @@ import android.Manifest;
 import android.os.Handler;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -25,11 +28,8 @@ public class SitMarkAudioBeaconListener
 
     private SitMarkAudioBeaconCallback callback;
 
-    private DatagramSocket datagramSocket;
-    private DatagramPacket datagramPacket;
     private RecorderThread audioThread;
     private AudioRecord audioRecord;
-    private String remoteIPAddress;
     private Handler handler;
 
     private boolean isListening;
@@ -39,6 +39,9 @@ public class SitMarkAudioBeaconListener
     private SitMarkAudioBeaconDetector[] detectors;
     private int numChannels;
     private int frameSize;
+
+    private String logFile;
+    FileOutputStream logStream;
 
     public SitMarkAudioBeaconListener()
     {
@@ -67,19 +70,62 @@ public class SitMarkAudioBeaconListener
         this.callback = callback;
     }
 
-    public void setRemoteListener(String remoteIPAddress)
+    public void setLogFile(String logFile)
     {
-        this.remoteIPAddress = remoteIPAddress;
+        this.logFile = logFile;
     }
 
     public void onStartListening()
     {
+        openLog();
         openMics();
     }
 
     public void onStopListening()
     {
         closeMics();
+        closeLog();
+    }
+
+    private void openLog()
+    {
+        if ((logFile != null) && ! logFile.isEmpty())
+        {
+            String realFile = logFile + ".s16le";
+
+            File file = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), realFile);
+
+            Log.d(LOGTAG,"openLog: file=" + file.toString());
+
+            try
+            {
+                logStream = new FileOutputStream(file);
+
+                Log.d(LOGTAG,"openLog: is open file=" + file.toString());
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void closeLog()
+    {
+        if (logStream != null)
+        {
+            try
+            {
+                logStream.close();
+            }
+            catch (Exception ignore)
+            {
+            }
+
+            logStream = null;
+            logFile = null;
+        }
     }
 
     private void openMics()
@@ -134,25 +180,6 @@ public class SitMarkAudioBeaconListener
 
             frameSize = detectors[ 0 ].getFrameSize();
 
-            if ((remoteIPAddress != null) && ! remoteIPAddress.isEmpty())
-            {
-                try
-                {
-                    datagramSocket = new DatagramSocket();
-                    datagramPacket = new DatagramPacket(new byte[0], 0);
-
-                    datagramPacket.setAddress(InetAddress.getByName(remoteIPAddress));
-                    datagramPacket.setPort(47474);
-                }
-                catch (Exception ignore)
-                {
-                    datagramSocket = null;
-                    datagramPacket = null;
-
-                    ignore.printStackTrace();
-                }
-            }
-
             audioRecord.startRecording();
 
             audioThread = new RecorderThread();
@@ -185,13 +212,6 @@ public class SitMarkAudioBeaconListener
             {
                 audioRecord.stop();
                 audioRecord = null;
-            }
-
-            if (datagramSocket != null)
-            {
-                datagramSocket.close();
-                datagramSocket = null;
-                datagramPacket = null;
             }
 
             isListening = false;
@@ -238,6 +258,17 @@ public class SitMarkAudioBeaconListener
                 int samplesRead = audioRecord.read(thisBuffer, 0, thisBuffer.length);
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
 
+                if (logStream != null)
+                {
+                    try
+                    {
+                        logStream.write(thisBuffer);
+                    }
+                    catch (Exception ignore)
+                    {
+                    }
+                }
+
                 //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 2);
                 //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 0.1f);
 
@@ -246,22 +277,6 @@ public class SitMarkAudioBeaconListener
                 int HFsamp = SitMarkAudioBeaconHelpers.getNUMHFSamples(thisBuffer, numChannels);
 
                 Log.d(LOGTAG, "RecorderThread: avgAmp=" + avgAmp + " maxAmp=" + maxAmp + " HFsamp=" + HFsamp);
-
-                if (datagramSocket != null)
-                {
-                    datagramPacket.setData(thisBuffer);
-
-                    try
-                    {
-                        datagramSocket.send(datagramPacket);
-
-                        //Log.d(LOGTAG, "RecorderThread: send length=" + datagramPacket.getLength());
-                    }
-                    catch (Exception ex)
-                    {
-                        ex.printStackTrace();
-                    }
-                }
 
                 for (int channel = 0; channel < numChannels; channel++)
                 {

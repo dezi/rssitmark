@@ -1,9 +1,15 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeacondemo;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
-import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.ToggleButton;
 import android.widget.TextView;
 import android.graphics.Color;
@@ -12,11 +18,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconCallback;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
-import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
-import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconRemote;
 
 //
 // Hallo bollo! Version vom 02.02.2017 15:40...
@@ -28,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
     private final Handler handler = new Handler();
     private SitMarkAudioBeaconListener listener;
-    private SitMarkAudioBeaconRemote remote;
 
     private long stopTime;
 
@@ -36,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
     private int syncFoundRight;
     private int codeFoundLeft;
     private int codeFoundRight;
+
+    private RadioButton um1, um3, um5;
+    private RadioButton om1, om3, om5;
 
     static
     {
@@ -59,30 +70,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         int screenWidth = SitMarkAudioBeaconHelpers.getScreenWidth(this);
 
         //
-        // Display current IP address.
-        //
-
-        String myIP = SitMarkAudioBeaconHelpers.getWifiIPAddress(this);
-        TextView ip = (TextView) findViewById(R.id.ipAddress);
-        ip.setText(myIP);
-
-        if (screenWidth < 500) ip.setTextSize(ip.getTextSize() / 2f);
-
-        //
-        // Dezi's shortcut setup...
-        //
-
-        String targetIP = null;
-
-        if ((myIP != null) && myIP.equals("192.168.2.102")) targetIP = "192.168.2.103";
-        if ((myIP != null) && myIP.equals("192.168.2.103")) targetIP = "192.168.2.102";
-
-        EditText et = (EditText) findViewById(R.id.targetIP);
-        et.setText(targetIP);
-
-        if (screenWidth < 500) et.setTextSize(et.getTextSize() / 3f);
-
-        //
         // Get bridge version string and architecture.
         //
 
@@ -104,6 +91,32 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         vtv.setText(version);
 
         if (screenWidth < 500) vtv.setTextSize(vtv.getTextSize() / 4f);
+
+        //
+        // Get model name.
+        //
+
+        String manufacturer = Build.MANUFACTURER.toUpperCase().replace(" ","_");
+        String model = Build.MODEL.toUpperCase().replace(" ","_");
+
+        TextView mtv = (TextView) findViewById(R.id.model);
+        mtv.setText(manufacturer + "-" + model);
+
+        if (screenWidth < 500) mtv.setTextSize(mtv.getTextSize() / 4f);
+
+        um1 = (RadioButton) findViewById(R.id.um1);
+        um3 = (RadioButton) findViewById(R.id.um3);
+        um5 = (RadioButton) findViewById(R.id.um5);
+        om1 = (RadioButton) findViewById(R.id.om1);
+        om3 = (RadioButton) findViewById(R.id.om3);
+        om5 = (RadioButton) findViewById(R.id.om5);
+
+        um1.setOnClickListener(onRadioClick);
+        um3.setOnClickListener(onRadioClick);
+        um5.setOnClickListener(onRadioClick);
+        om1.setOnClickListener(onRadioClick);
+        om3.setOnClickListener(onRadioClick);
+        om5.setOnClickListener(onRadioClick);
 
         //
         // Setup beacon listener and callback.
@@ -149,10 +162,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
                         displayCounts();
 
-                        EditText et = (EditText) findViewById(R.id.targetIP);
-
-                        String editTargetIP = et.getText().toString();
-                        listener.setRemoteListener(editTargetIP);
                         listener.onStartListening();
                     }
                 }
@@ -199,10 +208,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
                         displayCounts();
 
-                        EditText et = (EditText) findViewById(R.id.targetIP);
-
-                        String editTargetIP = et.getText().toString();
-                        listener.setRemoteListener(editTargetIP);
+                        listener.setLogFile(getLogFile());
                         listener.onStartListening();
 
                         handler.post(timerCheck);
@@ -211,51 +217,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 else
                 {
                     listener.onStopListening();
-                }
-            }
-        });
-
-        //
-        // Setup remote listener and callback.
-        //
-
-        remote = new SitMarkAudioBeaconRemote();
-        remote.checkAndRequestPermission(this);
-        remote.setCallbackListener(this);
-
-        //
-        // Setup start/stop remote listener button.
-        //
-
-        ToggleButton rtb = (ToggleButton) findViewById(R.id.remoteToggle);
-
-        rtb.setText("REMOTE UDP AUS");
-        rtb.setTextOff("REMOTE UDP AUS");
-        rtb.setTextOn("REMOTE UDP EIN");
-
-        rtb.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                boolean on = ((ToggleButton) view).isChecked();
-
-                Log.d(LOGTAG, "remoteToggle=" + on);
-
-                if (on)
-                {
-                    if (! remote.checkAndRequestPermission(MainActivity.this))
-                    {
-                        ((ToggleButton) view).setChecked(false);
-                    }
-                    else
-                    {
-                        remote.onStartListening();
-                    }
-                }
-                else
-                {
-                    remote.onStopListening();
                 }
             }
         });
@@ -285,25 +246,9 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
             tv = (TextView) findViewById(R.id.rBeacon);
             tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remlChannel);
-            tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remlSync);
-            tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remlBeacon);
-            tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remrChannel);
-            tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remrSync);
-            tv.setTextSize(tv.getTextSize() / 5f);
-
-            tv = (TextView) findViewById(R.id.remrBeacon);
-            tv.setTextSize(tv.getTextSize() / 5f);
         }
+
+        checkAndRequestExternalWrite(this);
     }
 
     //region SitMarkAudioBeaconCallback implementation.
@@ -335,28 +280,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
             handler.removeCallbacks(resetLocalSyncs);
             handler.postDelayed(resetLocalSyncs, 1000);
-        }
-
-        if (sender == remote)
-        {
-            Log.d(LOGTAG, "onSyncDetected: remote channel=" + channel);
-
-            if (channel == 0)
-            {
-                TextView lSync = (TextView) findViewById(R.id.remlSync);
-                lSync.setBackgroundColor(Color.GREEN);
-                lSync.setText("SYNC");
-            }
-
-            if (channel == 1)
-            {
-                TextView rSync = (TextView) findViewById(R.id.remrSync);
-                rSync.setBackgroundColor(Color.GREEN);
-                rSync.setText("SYNC");
-            }
-
-            handler.removeCallbacks(resetRemoteSyncs);
-            handler.postDelayed(resetRemoteSyncs, 1000);
         }
     }
 
@@ -390,28 +313,6 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
             handler.removeCallbacks(resetLocalSyncs);
             handler.postDelayed(resetLocalSyncs, 1000);
         }
-
-        if (sender == remote)
-        {
-            Log.d(LOGTAG, "onBeaconDetected: remote channel=" + channel);
-
-            if (channel == 0)
-            {
-                TextView lBeacon = (TextView) findViewById(R.id.remlBeacon);
-                lBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
-                lBeacon.setText(beacon);
-            }
-
-            if (channel == 1)
-            {
-                TextView rBeacon = (TextView) findViewById(R.id.remrBeacon);
-                rBeacon.setBackgroundColor(confidence >= 0.0 ? Color.GREEN : Color.RED);
-                rBeacon.setText(beacon);
-            }
-
-            handler.removeCallbacks(resetRemoteSyncs);
-            handler.postDelayed(resetRemoteSyncs, 1000);
-        }
     }
 
     //endregion SitMarkAudioBeaconCallback implementation.
@@ -424,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         tv.setText("L:" + syncFoundLeft + ":" + codeFoundLeft);
 
         tv = (TextView) findViewById(R.id.rChannel);
-        tv.setText("L:" + syncFoundRight + ":" + codeFoundRight);
+        tv.setText("R:" + syncFoundRight + ":" + codeFoundRight);
     }
 
     private final Runnable timerCheck = new Runnable()
@@ -476,26 +377,53 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         }
     };
 
-    private final Runnable resetRemoteSyncs = new Runnable()
+    private final View.OnClickListener onRadioClick = new View.OnClickListener()
     {
         @Override
-        public void run()
+        public void onClick(View view)
         {
-            TextView lSync = (TextView) findViewById(R.id.remlSync);
-            lSync.setBackgroundColor(Color.TRANSPARENT);
-            lSync.setText("");
+            RadioButton rb = (RadioButton) view;
 
-            TextView lBeacon = (TextView) findViewById(R.id.remlBeacon);
-            lBeacon.setBackgroundColor(Color.TRANSPARENT);
-
-            TextView rSync = (TextView) findViewById(R.id.remrSync);
-            rSync.setBackgroundColor(Color.TRANSPARENT);
-            rSync.setText("");
-
-            TextView rBeacon = (TextView) findViewById(R.id.remrBeacon);
-            rBeacon.setBackgroundColor(Color.TRANSPARENT);
+            um1.setChecked(rb == um1);
+            um3.setChecked(rb == um3);
+            um5.setChecked(rb == um5);
+            om1.setChecked(rb == om1);
+            om3.setChecked(rb == om3);
+            om5.setChecked(rb == om5);
         }
     };
 
+    private String getLogFile()
+    {
+        String which = "";
 
+        if (um1.isChecked()) which = "UM-1.5";
+        if (um3.isChecked()) which = "UM-3";
+        if (um5.isChecked()) which = "UM-5";
+
+        if (om1.isChecked()) which = "OM-1.5";
+        if (om3.isChecked()) which = "OM-3";
+        if (om5.isChecked()) which = "OM-5";
+
+        String manufacturer = Build.MANUFACTURER.toUpperCase().replace(" ","_");
+        String model = Build.MODEL.toUpperCase().replace(" ","_");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.getDefault());
+        String date = sdf.format(new Date());
+
+        return "RS-" + manufacturer + "-" + model + "-" + which + "-" + date;
+    }
+
+    public void checkAndRequestExternalWrite(Activity activity)
+    {
+        int permission = ContextCompat.checkSelfPermission(activity,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(activity,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    4711);
+        }
+    }
 }
