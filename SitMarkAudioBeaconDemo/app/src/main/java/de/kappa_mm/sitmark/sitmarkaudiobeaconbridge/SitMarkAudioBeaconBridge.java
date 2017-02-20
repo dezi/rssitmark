@@ -5,11 +5,11 @@ import android.util.Log;
 public class SitMarkAudioBeaconBridge
 {
     private static final String LOGTAG = SitMarkAudioBeaconBridge.class.getSimpleName();
-    private static final String VERSION = "03.02.2017:0";
+    private static final String VERSION = "20.02.2017:0";
 
     //region Constants.
 
-    private static final String desiredVersion = "Release (Full) - 02.02.2017:0 - Licensed";
+    private static final String desiredVersion = "Release (Full) - 15.02.2017:0 - Licensed";
 
     private static final String DETECTOR_KEY = "D8F26BEBD8E901A855689B52097914D8";
     private static final double PLAYLENGTH_2_BIT = 0.00264533d;
