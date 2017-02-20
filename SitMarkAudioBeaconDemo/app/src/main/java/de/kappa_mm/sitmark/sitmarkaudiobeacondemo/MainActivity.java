@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -26,6 +28,7 @@ import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconCallback;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconFile;
 
 //
 // Hallo bollo! Version vom 02.02.2017 15:40...
@@ -249,6 +252,14 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         }
 
         checkAndRequestExternalWrite(this);
+
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS),
+                "Watermark/RadioScreenStream.mp3");
+
+        SitMarkAudioBeaconFile watermark = new SitMarkAudioBeaconFile(file.toString());
+
+        watermark.dodat();
     }
 
     //region SitMarkAudioBeaconCallback implementation.

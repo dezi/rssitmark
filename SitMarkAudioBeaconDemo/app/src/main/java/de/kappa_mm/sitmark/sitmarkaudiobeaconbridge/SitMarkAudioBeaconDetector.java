@@ -8,7 +8,7 @@ public class SitMarkAudioBeaconDetector
 
     public SitMarkAudioBeaconDetector()
     {
-        detectorId = SitMarkAudioBeaconBridge.createDetector();
+        detectorId = SitMarkAudioBeaconBridge.createDetectorHF();
     }
 
     public void destroy()

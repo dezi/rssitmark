@@ -14,14 +14,27 @@ public class SitMarkAudioBeaconBridge
     private static final String DETECTOR_KEY = "D8F26BEBD8E901A855689B52097914D8";
     private static final double PLAYLENGTH_2_BIT = 0.00264533d;
 
-    private static final int nettoMessageLen = 24;
-
     private static final int sampleRateInHz = 44100;
+
+    //
+    // High frequency beacons parameters.
+    //
+
+    private static final int nettoMessageLenHF = 24;
     private static final int minFrequencyHF = 20270;
     private static final int maxFrequencyHF = 21430;
+    private static final int wmRedundancyHF = 1;
+    private static final int useECCHF = 0;
 
-    private static final int useECC = 0;
-    private static final int wmRedundancy = 1;
+    //
+    // Stream watermark parameters.
+    //
+
+    private static final int nettoMessageLenSW = 12;
+    private static final int minFrequencySW = 1000;
+    private static final int maxFrequencySW = 10000;
+    private static final int wmRedundancySW = 2;
+    private static final int useECCSW = 1;
 
     //endregion Constants
 
@@ -49,11 +62,20 @@ public class SitMarkAudioBeaconBridge
         return desiredVersion.equals(version);
     }
 
-    public static int createDetector()
+    public static int createDetectorSW()
     {
         return createDetector(
-                nettoMessageLen, minFrequencyHF, maxFrequencyHF,
-                useECC, wmRedundancy, sampleRateInHz,
+                nettoMessageLenSW, minFrequencySW, maxFrequencySW,
+                useECCSW, wmRedundancySW, sampleRateInHz,
+                5, DETECTOR_KEY, false, PLAYLENGTH_2_BIT
+        );
+    }
+
+    public static int createDetectorHF()
+    {
+        return createDetector(
+                nettoMessageLenHF, minFrequencyHF, maxFrequencyHF,
+                useECCHF, wmRedundancyHF, sampleRateInHz,
                 5, DETECTOR_KEY, true, PLAYLENGTH_2_BIT
         );
     }
@@ -62,7 +84,7 @@ public class SitMarkAudioBeaconBridge
     {
         String idBinary = "";
 
-        for (int inx = 0; inx < nettoMessageLen; inx++)
+        for (int inx = 0; inx < nettoMessageLenHF; inx++)
         {
             idBinary += Character.getNumericValue(messageBuffer[ inx ]);
         }
