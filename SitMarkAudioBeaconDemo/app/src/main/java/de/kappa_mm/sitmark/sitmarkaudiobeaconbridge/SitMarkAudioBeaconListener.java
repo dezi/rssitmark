@@ -41,7 +41,7 @@ public class SitMarkAudioBeaconListener
     private int frameSize;
 
     private String logFile;
-    FileOutputStream logStream;
+    private FileOutputStream logStream;
 
     public SitMarkAudioBeaconListener()
     {

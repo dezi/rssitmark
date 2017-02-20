@@ -1,8 +1,11 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 public class SitMarkAudioBeaconReceiver
@@ -22,6 +25,9 @@ public class SitMarkAudioBeaconReceiver
     private int numChannels;
     private int frameSize;
 
+    private String logFile;
+    private FileOutputStream logStream;
+
     public SitMarkAudioBeaconReceiver()
     {
         bufferQueue = new ArrayList<>();
@@ -35,12 +41,14 @@ public class SitMarkAudioBeaconReceiver
 
     public void onStartListening()
     {
+        //openLog();
         openThread();
     }
 
     public void onStopListening()
     {
         closeThread();
+        //closeLog();
     }
 
     public void pushBuffer(byte[] buffer)
@@ -102,6 +110,49 @@ public class SitMarkAudioBeaconReceiver
         }
 
         return read;
+    }
+
+    private void openLog()
+    {
+        logFile = "dezibezi";
+
+        if ((logFile != null) && ! logFile.isEmpty())
+        {
+            String realFile = logFile + ".s16le";
+
+            File file = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), realFile);
+
+            Log.d(LOGTAG,"openLog: file=" + file.toString());
+
+            try
+            {
+                logStream = new FileOutputStream(file);
+
+                Log.d(LOGTAG,"openLog: is open file=" + file.toString());
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void closeLog()
+    {
+        if (logStream != null)
+        {
+            try
+            {
+                logStream.close();
+            }
+            catch (Exception ignore)
+            {
+            }
+
+            logStream = null;
+            logFile = null;
+        }
     }
 
     private void openThread()
@@ -190,6 +241,17 @@ public class SitMarkAudioBeaconReceiver
                 Log.d(LOGTAG, "ReceiverThread: samplesRead=" + samplesRead);
                 if (samplesRead < thisBuffer.length) break;
 
+                if (logStream != null)
+                {
+                    try
+                    {
+                        logStream.write(thisBuffer);
+                    }
+                    catch (Exception ignore)
+                    {
+                    }
+                }
+
                 for (int channel = 0; channel < numChannels; channel++)
                 {
                     int sinx = channel * 2;
@@ -210,6 +272,7 @@ public class SitMarkAudioBeaconReceiver
 
                     Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " confidence=" + confidence);
 
+                    /*
                     //
                     // Read value of sound beacon from detector.
                     //
@@ -235,6 +298,7 @@ public class SitMarkAudioBeaconReceiver
                             }
                         });
                     }
+                    */
                 }
             }
 
