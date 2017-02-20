@@ -43,15 +43,11 @@ public class SitMarkAudioBeaconReceiver
         closeThread();
     }
 
-    public void pushBuffer(byte[] buffer, int offset, int size)
+    public void pushBuffer(byte[] buffer)
     {
-        byte[] newBuffer = new byte[ size ];
-
-        System.arraycopy(buffer, offset, newBuffer, 0, size);
-
         synchronized (bufferQueue)
         {
-            bufferQueue.add(newBuffer);
+            bufferQueue.add(buffer);
         }
     }
 
@@ -59,7 +55,7 @@ public class SitMarkAudioBeaconReceiver
     {
         int read = 0;
 
-        while (read < size)
+        while (isRunning && (read < size))
         {
             byte[] chunk = null;
 
@@ -72,7 +68,7 @@ public class SitMarkAudioBeaconReceiver
             {
                 try
                 {
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 }
                 catch (Exception ignore)
                 {

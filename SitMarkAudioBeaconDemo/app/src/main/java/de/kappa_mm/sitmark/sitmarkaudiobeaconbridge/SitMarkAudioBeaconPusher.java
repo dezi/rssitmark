@@ -5,22 +5,21 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.util.Log;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 
-public class SitMarkAudioBeaconFile
+public class SitMarkAudioBeaconPusher
 {
-    private static final String LOGTAG = SitMarkAudioBeaconFile.class.getSimpleName();
+    private static final String LOGTAG = SitMarkAudioBeaconPusher.class.getSimpleName();
 
     private String mediaFile;
     private MediaExtractor extractor;
     private MediaCodec codec;
 
-    public SitMarkAudioBeaconFile()
+    public SitMarkAudioBeaconPusher()
     {
     }
 
-    public void dodat(String mediaFile)
+    public void dodat(String mediaFile, SitMarkAudioBeaconReceiver receiver)
     {
         this.mediaFile = mediaFile;
 
@@ -50,14 +49,17 @@ public class SitMarkAudioBeaconFile
                 {
                     ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferId);
 
-                    int xfer = extractor.readSampleData(inputBuffer, 0);
-                    long presentationTimeUs = extractor.getSampleTime();
+                    if (inputBuffer != null)
+                    {
+                        int xfer = extractor.readSampleData(inputBuffer, 0);
+                        if (xfer < 0) break;
+                        Log.d(LOGTAG, "xfer=" + xfer);
 
-                    if (xfer < 0) break;
-                    Log.d(LOGTAG, "xfer=" + xfer);
+                        long presentationTimeUs = extractor.getSampleTime();
+                        codec.queueInputBuffer(inputBufferId, 0, xfer, presentationTimeUs, 0);
+                    }
+
                     extractor.advance();
-
-                    codec.queueInputBuffer(inputBufferId, 0, xfer, presentationTimeUs, 0);
                 }
 
                 MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
@@ -68,7 +70,15 @@ public class SitMarkAudioBeaconFile
                 {
                     ByteBuffer outputBuffer = codec.getOutputBuffer(outputBufferId);
 
-                    //Log.d(LOGTAG, "outputsize=" + outputBuffer.remaining());
+                    Log.d(LOGTAG, "outputsize=" + outputBuffer.remaining());
+
+                    if (outputBuffer != null)
+                    {
+                        byte[] buffer = new byte[outputBuffer.remaining()];
+                        outputBuffer.get(buffer, 0, buffer.length);
+
+                        receiver.pushBuffer(buffer);
+                    }
 
                     codec.releaseOutputBuffer(outputBufferId, false);
                 }

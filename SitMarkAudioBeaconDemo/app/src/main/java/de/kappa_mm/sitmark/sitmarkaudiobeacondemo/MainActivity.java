@@ -28,7 +28,8 @@ import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconBridge;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconListener;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconCallback;
 import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconHelpers;
-import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconFile;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconPusher;
+import de.kappa_mm.sitmark.sitmarkaudiobeaconbridge.SitMarkAudioBeaconReceiver;
 
 //
 // Hallo bollo! Version vom 02.02.2017 15:40...
@@ -257,9 +258,13 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
                 Environment.DIRECTORY_DOWNLOADS),
                 "Watermark/RadioScreenStream.mp3");
 
-        SitMarkAudioBeaconFile watermark = new SitMarkAudioBeaconFile(file.toString());
+        SitMarkAudioBeaconPusher watermark = new SitMarkAudioBeaconPusher();
 
-        watermark.dodat();
+        SitMarkAudioBeaconReceiver receiver = new SitMarkAudioBeaconReceiver();
+
+        receiver.onStartListening();
+        watermark.dodat(file.toString(), receiver);
+        receiver.onStopListening();
     }
 
     //region SitMarkAudioBeaconCallback implementation.
