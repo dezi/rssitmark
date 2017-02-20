@@ -175,7 +175,7 @@ public class SitMarkAudioBeaconListener
 
             for (int inx = 0; inx < numChannels; inx++)
             {
-                detectors[ inx ] = new SitMarkAudioBeaconDetector();
+                detectors[ inx ] = new SitMarkAudioBeaconDetector(true);
             }
 
             frameSize = detectors[ 0 ].getFrameSize();
@@ -257,6 +257,7 @@ public class SitMarkAudioBeaconListener
 
                 int samplesRead = audioRecord.read(thisBuffer, 0, thisBuffer.length);
                 //Log.d(LOGTAG, "RecorderThread: samplesRead=" + samplesRead);
+                if (samplesRead < thisBuffer.length) break;
 
                 if (logStream != null)
                 {
@@ -351,7 +352,7 @@ public class SitMarkAudioBeaconListener
 
                         char[] message = new char[ 32 ];
                         double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
-                        String beacon = SitMarkAudioBeaconBridge.getDecodedBeacon(message);
+                        String beacon = detectors[ channel ].getDecodedBeacon(message);
 
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " beacon=" + beacon);
 

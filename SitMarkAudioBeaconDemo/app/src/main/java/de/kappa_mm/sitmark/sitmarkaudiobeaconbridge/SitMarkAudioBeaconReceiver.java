@@ -86,6 +86,7 @@ public class SitMarkAudioBeaconReceiver
             else
             {
                 int rest = size - read;
+
                 System.arraycopy(chunk, 0, buffer, offset, rest);
                 offset += rest;
                 read += rest;
@@ -113,7 +114,7 @@ public class SitMarkAudioBeaconReceiver
 
             for (int inx = 0; inx < numChannels; inx++)
             {
-                detectors[ inx ] = new SitMarkAudioBeaconDetector();
+                detectors[ inx ] = new SitMarkAudioBeaconDetector(false);
             }
 
             frameSize = detectors[ 0 ].getFrameSize();
@@ -189,102 +190,52 @@ public class SitMarkAudioBeaconReceiver
                 Log.d(LOGTAG, "ReceiverThread: samplesRead=" + samplesRead);
                 if (samplesRead < thisBuffer.length) break;
 
-                /*
                 for (int channel = 0; channel < numChannels; channel++)
                 {
                     int sinx = channel * 2;
 
                     for (int sample = 0; sample < frameSize; sample++)
                     {
-                        cbuffer[ (sample << 1) ] = lastBuffer[ sinx ];
-                        cbuffer[ (sample << 1) + 1 ] = lastBuffer[ sinx + 1 ];
+                        cbuffer[(sample << 1)] = lastBuffer[sinx];
+                        cbuffer[(sample << 1) + 1] = lastBuffer[sinx + 1];
 
                         sinx += (numChannels << 1);
                     }
 
-                    int sync = detectors[ channel ].searchSync(cbuffer);
+                    //
+                    // Detect watermark.
+                    //
 
-                    if (sync > 0)
+                    double confidence = detectors[channel].detectWatermark(cbuffer);
+
+                    Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " confidence=" + confidence);
+
+                    //
+                    // Read value of sound beacon from detector.
+                    //
+
+                    char[] message = new char[32];
+                    double acconfidence = detectors[channel].getAccumulatedMessage(message);
+                    String beacon = detectors[channel].getDecodedBeacon(message);
+
+                    Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " beacon=" + beacon + " acconf=" + acconfidence);
+
+                    if (callback != null)
                     {
-                        Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " sync=" + sync);
+                        final int cbchannel = channel;
+                        final String cbbeacon = beacon;
+                        final double cbconfidence = acconfidence;
 
-                        if (callback != null)
+                        handler.post(new Runnable()
                         {
-                            final int cbchannel = channel;
-
-                            handler.post(new Runnable()
+                            @Override
+                            public void run()
                             {
-                                @Override
-                                public void run()
-                                {
-                                    callback.onSyncDetected(SitMarkAudioBeaconReceiver.this, cbchannel);
-                                }
-                            });
-                        }
-
-                        //
-                        // Shift down current buffer.
-                        //
-
-                        int newpos = 0;
-                        int oldpos = sync * 2;
-
-                        while (oldpos < cbuffer.length)
-                        {
-                            cbuffer[ newpos++ ] = cbuffer[ oldpos++ ];
-                            cbuffer[ newpos++ ] = cbuffer[ oldpos++ ];
-                        }
-
-                        //
-                        // Complete buffer from actual frame.
-                        //
-
-                        sinx = channel * 2;
-
-                        while (newpos < cbuffer.length)
-                        {
-                            cbuffer[ newpos++ ] = thisBuffer[ sinx ];
-                            cbuffer[ newpos++ ] = thisBuffer[ sinx + 1 ];
-
-                            sinx += (numChannels << 1);
-                        }
-
-                        //
-                        // Detect sound beacon from now complete frame.
-                        //
-
-                        double confidence = detectors[ channel ].detectBeacon(cbuffer);
-
-                        Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " confidence=" + confidence);
-
-                        //
-                        // Read value of sound beacon from detector.
-                        //
-
-                        char[] message = new char[ 32 ];
-                        double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
-                        String beacon = SitMarkAudioBeaconBridge.getDecodedBeacon(message);
-
-                        Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " beacon=" + beacon);
-
-                        if (callback != null)
-                        {
-                            final int cbchannel = channel;
-                            final String cbbeacon = beacon;
-                            final double cbconfidence = acconfidence;
-
-                            handler.post(new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    callback.onBeaconDetected(SitMarkAudioBeaconReceiver.this, cbchannel, cbconfidence, cbbeacon);
-                                }
-                            });
-                        }
+                                callback.onBeaconDetected(SitMarkAudioBeaconReceiver.this, cbchannel, cbconfidence, cbbeacon);
+                            }
+                        });
                     }
                 }
-                */
             }
 
             Log.d(LOGTAG, "ReceiverThread: ended.");

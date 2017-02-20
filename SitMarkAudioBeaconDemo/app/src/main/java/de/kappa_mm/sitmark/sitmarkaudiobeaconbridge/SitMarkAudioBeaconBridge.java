@@ -48,6 +48,11 @@ public class SitMarkAudioBeaconBridge
         return sampleRateInHz;
     }
 
+    public static int getMessageLen(boolean hf)
+    {
+        return hf ? nettoMessageLenHF : nettoMessageLenSW;
+    }
+
     public static void initializeBridge()
     {
         System.loadLibrary("SitMarkAudio2MDetectorAPI");
@@ -80,18 +85,6 @@ public class SitMarkAudioBeaconBridge
         );
     }
 
-    public static String getDecodedBeacon(char[] messageBuffer)
-    {
-        String idBinary = "";
-
-        for (int inx = 0; inx < nettoMessageLenHF; inx++)
-        {
-            idBinary += Character.getNumericValue(messageBuffer[ inx ]);
-        }
-
-        return idBinary;
-    }
-
     //region Native static methods.
 
     public static native String getVersionString();
@@ -117,6 +110,8 @@ public class SitMarkAudioBeaconBridge
     public static native int searchSync(int detectorId, byte[] audioData);
 
     public static native double detectBeacon(int detectorId, byte[] audioData);
+
+    public static native double detectWatermark(int detectorId, byte[] audioData);
 
     public static native double getAccumulatedMessage(int detectorId, char[] messageBuffer);
 

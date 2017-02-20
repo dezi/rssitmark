@@ -209,6 +209,31 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
     return -1.0;
 }
 
+extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_detectWatermark(
+        JNIEnv *env,
+        jclass type,
+        jint detectorId,
+        jbyteArray audioData)
+{
+    SitMarkAudioBCDetectorAPI* detector = findDetectorApi(detectorId);
+
+    if (detector != NULL)
+    {
+        jbyte* audioBytes = env->GetByteArrayElements(audioData, NULL);
+        short int* frames = reinterpret_cast<short int*>(audioBytes);
+
+        double confidence = 0.0;
+
+        detector->feedDetector(frames, confidence);
+
+        env->ReleaseByteArrayElements(audioData, audioBytes, JNI_ABORT);
+
+        return confidence;
+    }
+
+    return -1.0;
+}
+
 extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getAccumulatedMessage(
         JNIEnv *env,
         jclass type,

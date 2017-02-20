@@ -5,10 +5,30 @@ public class SitMarkAudioBeaconDetector
     private static final String LOGTAG = SitMarkAudioBeaconDetector.class.getSimpleName();
 
     private final int detectorId;
+    private final boolean hf;
 
-    public SitMarkAudioBeaconDetector()
+    public SitMarkAudioBeaconDetector(boolean hf)
     {
-        detectorId = SitMarkAudioBeaconBridge.createDetectorHF();
+        this.hf = hf;
+
+        detectorId = hf
+                    ? SitMarkAudioBeaconBridge.createDetectorHF()
+                    : SitMarkAudioBeaconBridge.createDetectorSW()
+                    ;
+    }
+
+    public String getDecodedBeacon(char[] messageBuffer)
+    {
+        int nettoMessageLen = SitMarkAudioBeaconBridge.getMessageLen(hf);
+
+        String idBinary = "";
+
+        for (int inx = 0; inx < nettoMessageLen; inx++)
+        {
+            idBinary += Character.getNumericValue(messageBuffer[ inx ]);
+        }
+
+        return idBinary;
     }
 
     public void destroy()
@@ -29,6 +49,11 @@ public class SitMarkAudioBeaconDetector
     public double detectBeacon(byte[] audioData)
     {
         return SitMarkAudioBeaconBridge.detectBeacon(detectorId, audioData);
+    }
+
+    public double detectWatermark(byte[] audioData)
+    {
+        return SitMarkAudioBeaconBridge.detectWatermark(detectorId, audioData);
     }
 
     public double getAccumulatedMessage(char[] message)
