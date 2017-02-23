@@ -1,5 +1,7 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
+import android.util.Log;
+
 public class SitMarkAudioBeaconDetector
 {
     private static final String LOGTAG = SitMarkAudioBeaconDetector.class.getSimpleName();
@@ -10,6 +12,8 @@ public class SitMarkAudioBeaconDetector
     public SitMarkAudioBeaconDetector(boolean hf)
     {
         this.hf = hf;
+
+        Log.d(LOGTAG, "SitMarkAudioBeaconDetector hf=" + hf);
 
         detectorId = hf
                     ? SitMarkAudioBeaconBridge.createDetectorHF()
@@ -34,6 +38,11 @@ public class SitMarkAudioBeaconDetector
     public void destroy()
     {
         SitMarkAudioBeaconBridge.destroyDetector(detectorId);
+    }
+
+    public void reset()
+    {
+        SitMarkAudioBeaconBridge.resetDetector(detectorId);
     }
 
     public int getFrameSize()

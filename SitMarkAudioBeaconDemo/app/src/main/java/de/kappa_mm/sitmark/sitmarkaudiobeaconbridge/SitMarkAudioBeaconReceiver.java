@@ -218,7 +218,6 @@ public class SitMarkAudioBeaconReceiver
             // from the current buffer.
             //
 
-            byte[] lastBuffer = new byte[ frameSize * 2 * numChannels ];
             byte[] thisBuffer = new byte[ frameSize * 2 * numChannels ];
 
             byte[] cbuffer = new byte[ frameSize * 2 ];
@@ -233,12 +232,8 @@ public class SitMarkAudioBeaconReceiver
                 // Switch buffers.
                 //
 
-                byte[] tmp = lastBuffer;
-                lastBuffer = thisBuffer;
-                thisBuffer = tmp;
-
                 int samplesRead = readBuffer(thisBuffer, 0, thisBuffer.length);
-                Log.d(LOGTAG, "ReceiverThread: samplesRead=" + samplesRead);
+                Log.d(LOGTAG, "ReceiverThread: samplesRead=" + samplesRead + " framesize=" + frameSize);
                 if (samplesRead < thisBuffer.length) break;
 
                 if (logStream != null)
@@ -258,8 +253,8 @@ public class SitMarkAudioBeaconReceiver
 
                     for (int sample = 0; sample < frameSize; sample++)
                     {
-                        cbuffer[(sample << 1)] = lastBuffer[sinx];
-                        cbuffer[(sample << 1) + 1] = lastBuffer[sinx + 1];
+                        cbuffer[(sample << 1)] = thisBuffer[sinx];
+                        cbuffer[(sample << 1) + 1] = thisBuffer[sinx + 1];
 
                         sinx += (numChannels << 1);
                     }
@@ -272,33 +267,40 @@ public class SitMarkAudioBeaconReceiver
 
                     Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " confidence=" + confidence);
 
-                    /*
-                    //
-                    // Read value of sound beacon from detector.
-                    //
-
-                    char[] message = new char[32];
-                    double acconfidence = detectors[channel].getAccumulatedMessage(message);
-                    String beacon = detectors[channel].getDecodedBeacon(message);
-
-                    Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " beacon=" + beacon + " acconf=" + acconfidence);
-
-                    if (callback != null)
+                    if ((collect % 20) == 0)
                     {
-                        final int cbchannel = channel;
-                        final String cbbeacon = beacon;
-                        final double cbconfidence = acconfidence;
+                        //
+                        // Read value of sound beacon from detector.
+                        //
 
-                        handler.post(new Runnable()
+                        char[] message = new char[32];
+                        double acconfidence = detectors[channel].getAccumulatedMessage(message);
+
+                        if (acconfidence >= 0)
                         {
-                            @Override
-                            public void run()
+                            detectors[channel].reset();
+
+                            String beacon = detectors[channel].getDecodedBeacon(message);
+
+                            Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " beacon=" + beacon + " acconf=" + acconfidence);
+
+                            if (callback != null)
                             {
-                                callback.onBeaconDetected(SitMarkAudioBeaconReceiver.this, cbchannel, cbconfidence, cbbeacon);
+                                final int cbchannel = channel;
+                                final String cbbeacon = beacon;
+                                final double cbconfidence = acconfidence;
+
+                                handler.post(new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        callback.onBeaconDetected(SitMarkAudioBeaconReceiver.this, cbchannel, cbconfidence, cbbeacon);
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
-                    */
                 }
             }
 

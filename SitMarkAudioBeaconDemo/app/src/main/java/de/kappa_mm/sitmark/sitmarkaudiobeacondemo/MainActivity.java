@@ -256,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
 
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS),
-                "Watermark/RadioScreenStream.mp3");
+                "Watermark/RadioScreenStream4.mp3");
 
         SitMarkAudioBeaconPusher watermark = new SitMarkAudioBeaconPusher();
 

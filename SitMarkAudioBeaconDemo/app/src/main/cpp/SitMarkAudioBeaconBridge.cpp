@@ -91,14 +91,32 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
         jboolean hfMode,
         jdouble playlength2BitSequence)
 {
-    const char *key = env->GetStringUTFChars(key_, 0);
+    SitMarkAudioBCDetectorAPI* detector = NULL;
 
-    SitMarkAudioBCDetectorAPI* detector = SitMarkAudioBCDetectorLibrary::createInstance(
-            SITMARKAUDIOBCDETECTORAPI_TYPE_WATERMARK,
-            netMessLen, sampleFreq, freqMin, freqMax,
-            useEcc, wmRedundancy, ringBufferLength,
-            key, NULL, hfMode, playlength2BitSequence
-    );
+    if (hfMode)
+    {
+        __android_log_write(ANDROID_LOG_INFO, "SitMarkAudioBeaconBridge: createDetector", "hf");
+
+        const char *key = env->GetStringUTFChars(key_, 0);
+
+        detector = SitMarkAudioBCDetectorLibrary::createInstance(
+                SITMARKAUDIOBCDETECTORAPI_TYPE_WATERMARK,
+                netMessLen, sampleFreq, freqMin, freqMax,
+                useEcc, wmRedundancy, ringBufferLength,
+                key, NULL, hfMode, playlength2BitSequence
+        );
+    }
+    else
+    {
+        __android_log_write(ANDROID_LOG_INFO, "SitMarkAudioBeaconBridge: createDetector", "sw");
+
+        detector = SitMarkAudioBCDetectorLibrary::createInstance(
+                SITMARKAUDIOBCDETECTORAPI_TYPE_WATERMARK,
+                netMessLen, sampleFreq, freqMin, freqMax,
+                useEcc, wmRedundancy, ringBufferLength,
+                NULL, NULL, hfMode, -1.0
+        );
+    }
 
     detector->initialize();
     detector->reset();

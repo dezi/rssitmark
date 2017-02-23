@@ -72,7 +72,7 @@ public class SitMarkAudioBeaconBridge
         return createDetector(
                 nettoMessageLenSW, minFrequencySW, maxFrequencySW,
                 useECCSW, wmRedundancySW, sampleRateInHz,
-                5, DETECTOR_KEY, false, PLAYLENGTH_2_BIT
+                5, null, false, -1.0
         );
     }
 
