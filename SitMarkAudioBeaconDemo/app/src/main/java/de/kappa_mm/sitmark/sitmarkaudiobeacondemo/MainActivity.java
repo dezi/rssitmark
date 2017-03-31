@@ -252,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
             tv.setTextSize(tv.getTextSize() / 5f);
         }
 
+        /*
         checkAndRequestExternalWrite(this);
 
         File file = new File(Environment.getExternalStoragePublicDirectory(
@@ -265,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements SitMarkAudioBeaco
         receiver.onStartListening();
         watermark.dodat(file.toString(), receiver);
         receiver.onStopListening();
+        */
     }
 
     //region SitMarkAudioBeaconCallback implementation.
