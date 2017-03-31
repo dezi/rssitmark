@@ -8,15 +8,24 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 
+//
+// High level watermark interface via audio samples push.
+//
+// Starts a worker thread for beacon recognition and
+// utilizes callback interface for beacon delivery.
+//
+
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class SitMarkAudioBeaconReceiver
 {
     private static final String LOGTAG = SitMarkAudioBeaconReceiver.class.getSimpleName();
+
+    private final Handler handler;
 
     private SitMarkAudioBeaconCallback callback;
 
     private final ArrayList<byte[]> bufferQueue;
     private ReceiverThread receiverThread;
-    private Handler handler;
 
     private boolean isListening;
     private boolean isRunning;
@@ -34,22 +43,56 @@ public class SitMarkAudioBeaconReceiver
         handler = new Handler();
     }
 
+    /***
+     *
+     * Register a callback instance.
+     *
+     * @param callback  The instance to be called.
+     */
+
     public void setCallbackListener(SitMarkAudioBeaconCallback callback)
     {
         this.callback = callback;
     }
 
+    /***
+     *
+     * Register a log file.
+     *
+     * @param logFile   Log file name.
+     */
+
+    public void setLogFile(String logFile)
+    {
+        this.logFile = logFile;
+    }
+
+    /***
+     * Start listening thread.
+     */
+
     public void onStartListening()
     {
-        //openLog();
+        openLog();
         openThread();
     }
+
+    /***
+     * Stop listening thread.
+     */
 
     public void onStopListening()
     {
         closeThread();
-        //closeLog();
+        closeLog();
     }
+
+    /***
+     *
+     * Push a raw sample buffer into queue.
+     *
+     * @param buffer Raw audio samples in PCM16LE format.
+     */
 
     public void pushBuffer(byte[] buffer)
     {
@@ -58,6 +101,15 @@ public class SitMarkAudioBeaconReceiver
             bufferQueue.add(buffer);
         }
     }
+
+    /***
+     * Read buffer from queue.
+     *
+     * @param buffer    Buffer to read into.
+     * @param offset    Buffer offset.
+     * @param size      Buffer size.
+     * @return          Number of bytes read.
+     */
 
     private int readBuffer(byte[] buffer, int offset, int size)
     {
@@ -112,10 +164,12 @@ public class SitMarkAudioBeaconReceiver
         return read;
     }
 
+    /***
+     * Open log.
+     */
+
     private void openLog()
     {
-        logFile = "dezibezi";
-
         if ((logFile != null) && ! logFile.isEmpty())
         {
             String realFile = logFile + ".s16le";
@@ -138,6 +192,10 @@ public class SitMarkAudioBeaconReceiver
         }
     }
 
+    /***
+     * Close log.
+     */
+
     private void closeLog()
     {
         if (logStream != null)
@@ -154,6 +212,10 @@ public class SitMarkAudioBeaconReceiver
             logFile = null;
         }
     }
+
+    /***
+     * Open consumer thread.
+     */
 
     private void openThread()
     {
@@ -177,6 +239,10 @@ public class SitMarkAudioBeaconReceiver
         }
     }
 
+    /***
+     * Close consumer thread.
+     */
+
     private void closeThread()
     {
         if (isListening)
@@ -199,6 +265,10 @@ public class SitMarkAudioBeaconReceiver
             isListening = false;
         }
     }
+
+    /***
+     * Receiver thread working class.
+     */
 
     private class ReceiverThread extends Thread
     {
@@ -280,7 +350,7 @@ public class SitMarkAudioBeaconReceiver
                         {
                             detectors[channel].reset();
 
-                            String beacon = detectors[channel].getDecodedBeacon(message);
+                            String beacon = detectors[channel].getDecodedMessage(message);
 
                             Log.d(LOGTAG, "ReceiverThread: channel=" + channel + " beacon=" + beacon + " acconf=" + acconfidence);
 

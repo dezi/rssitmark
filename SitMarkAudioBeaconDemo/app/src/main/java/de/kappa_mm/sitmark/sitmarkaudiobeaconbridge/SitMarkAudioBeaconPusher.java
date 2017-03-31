@@ -7,22 +7,21 @@ import android.util.Log;
 
 import java.nio.ByteBuffer;
 
+//
+// Simple debugging class to stream an
+// audio file into watermark detection.
+//
+
+@SuppressWarnings({"FieldCanBeLocal", "WeakerAccess", "unused"})
 public class SitMarkAudioBeaconPusher
 {
     private static final String LOGTAG = SitMarkAudioBeaconPusher.class.getSimpleName();
 
-    private String mediaFile;
     private MediaExtractor extractor;
     private MediaCodec codec;
 
-    public SitMarkAudioBeaconPusher()
-    {
-    }
-
     public void dodat(String mediaFile, SitMarkAudioBeaconReceiver receiver)
     {
-        this.mediaFile = mediaFile;
-
         try
         {
             extractor = new MediaExtractor();
@@ -47,7 +46,12 @@ public class SitMarkAudioBeaconPusher
                 int inputBufferId = codec.dequeueInputBuffer(1000);
                 if (inputBufferId >= 0)
                 {
-                    ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferId);
+                    ByteBuffer inputBuffer = null;
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+                    {
+                        inputBuffer = codec.getInputBuffer(inputBufferId);
+                    }
 
                     if (inputBuffer != null)
                     {
@@ -68,12 +72,17 @@ public class SitMarkAudioBeaconPusher
 
                 if (outputBufferId >= 0)
                 {
-                    ByteBuffer outputBuffer = codec.getOutputBuffer(outputBufferId);
+                    ByteBuffer outputBuffer = null;
 
-                    Log.d(LOGTAG, "outputsize=" + outputBuffer.remaining());
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+                    {
+                        outputBuffer = codec.getOutputBuffer(outputBufferId);
+                    }
 
                     if (outputBuffer != null)
                     {
+                        Log.d(LOGTAG, "outputsize=" + outputBuffer.remaining());
+
                         byte[] buffer = new byte[outputBuffer.remaining()];
                         outputBuffer.get(buffer, 0, buffer.length);
 

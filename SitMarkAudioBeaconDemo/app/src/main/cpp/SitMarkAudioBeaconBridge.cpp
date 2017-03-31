@@ -4,11 +4,24 @@
 
 #include "SitMarkAudioBCDetectorAPI.h"
 
+//
+// Native CPP part of SitMarkAudioBeaconBridge.
+//
+// This has a counterpart in SitMarkAudioBeaconBridge.java.
+//
+// All calls to the native Fraunhofer implementation are made
+// through this bridging code.
+//
+
 //region Helper methods.
 
 #define MAXINSTANCES 10
 bool initialized = false;
 SitMarkAudioBCDetectorAPI *instances[ MAXINSTANCES ];
+
+//
+// Save detector handle and associate with id number.
+//
 
 int saveDetectorApi(SitMarkAudioBCDetectorAPI* newDetector)
 {
@@ -35,12 +48,20 @@ int saveDetectorApi(SitMarkAudioBCDetectorAPI* newDetector)
     return -1;
 }
 
+//
+// Retrieve detector handle by id number.
+//
+
 SitMarkAudioBCDetectorAPI* findDetectorApi(int detectorId)
 {
     if (! initialized) return NULL;
 
     return ((detectorId >= 0) && (detectorId < MAXINSTANCES)) ? instances[ detectorId ] : NULL;
 }
+
+//
+// Delete detector handle by id number.
+//
 
 void killDetectorApi(int detectorId)
 {
@@ -52,6 +73,10 @@ void killDetectorApi(int detectorId)
 //endregion Helper methods.
 
 //region Static methods.
+
+//
+// Retrieve version string of binary libraries.
+//
 
 extern "C" jstring Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getVersionString(
         JNIEnv *env,
@@ -76,6 +101,10 @@ extern "C" jstring Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
 
     return env->NewStringUTF(resultStr.c_str());
 }
+
+//
+// Create detector instance. Parameters follow Fraunhofer documentation.
+//
 
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_createDetector(
         JNIEnv *env,
@@ -128,6 +157,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
 //region Detector methods.
 
+//
+// Retrieve detectors current framesize in samples.
+//
+
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getFrameSize(
         JNIEnv *env,
         jclass type,
@@ -137,6 +170,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
     return (detector != NULL) ? detector->getFrameSize() : -1;
 }
+
+//
+// Reset detector state after watermark or beacon detection.
+//
 
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_resetDetector(
         JNIEnv *env,
@@ -155,6 +192,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
     return -1;
 }
 
+//
+// Destroy and deallocate detector.
+//
+
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_destroyDetector(
         JNIEnv *env,
         jclass type,
@@ -172,6 +213,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
 
     return -1;
 }
+
+//
+// Search for sync in high frequency beacon detect mode.
+//
 
 extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_searchSync(
         JNIEnv *env,
@@ -200,6 +245,10 @@ extern "C" jint Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioB
     return -1;
 }
 
+//
+// Detect beacon in high frequency mode after a sync was encountered.
+//
+
 extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_detectBeacon(
         JNIEnv *env,
         jclass type,
@@ -227,6 +276,10 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
     return -1.0;
 }
 
+//
+// Detect watermark in embedded watermark buffer mode.
+//
+
 extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_detectWatermark(
         JNIEnv *env,
         jclass type,
@@ -251,6 +304,10 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
 
     return -1.0;
 }
+
+//
+// Retrieve watermark or beacon with a confidence value.
+//
 
 extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAudioBeaconBridge_getAccumulatedMessage(
         JNIEnv *env,
@@ -285,4 +342,3 @@ extern "C" jdouble Java_de_kappa_1mm_sitmark_sitmarkaudiobeaconbridge_SitMarkAud
 }
 
 //enregion Detector methods.
-

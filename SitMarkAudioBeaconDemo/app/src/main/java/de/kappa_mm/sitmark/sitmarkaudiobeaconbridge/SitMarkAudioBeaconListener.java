@@ -1,10 +1,5 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
-import android.media.audiofx.AcousticEchoCanceler;
-import android.media.audiofx.AutomaticGainControl;
-import android.media.audiofx.NoiseSuppressor;
-
-import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.app.ActivityCompat;
 import android.content.pm.PackageManager;
@@ -13,24 +8,35 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.app.Activity;
 import android.Manifest;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 
+//import android.media.audiofx.AcousticEchoCanceler;
+//import android.media.audiofx.AutomaticGainControl;
+//import android.media.audiofx.NoiseSuppressor;
+
+//
+// High level beacon detection interface via microphone.
+//
+// Starts a worker thread for beacon recognition and
+// utilizes callback interface for beacon delivery.
+//
+
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class SitMarkAudioBeaconListener
 {
     private static final String LOGTAG = SitMarkAudioBeaconListener.class.getSimpleName();
+
+    private final Handler handler;
 
     private SitMarkAudioBeaconCallback callback;
 
     private RecorderThread audioThread;
     private AudioRecord audioRecord;
-    private Handler handler;
 
     private boolean isListening;
     private boolean isRunning;
@@ -47,6 +53,14 @@ public class SitMarkAudioBeaconListener
     {
         handler = new Handler();
     }
+
+    /***
+     *
+     * Utility method to request audio record permission.
+     *
+     * @param activity  Current activity.
+     * @return          True if permission is granted.
+     */
 
     public boolean checkAndRequestPermission(Activity activity)
     {
@@ -65,15 +79,33 @@ public class SitMarkAudioBeaconListener
         return isGranted;
     }
 
+    /***
+     *
+     * Register a callback instance.
+     *
+     * @param callback  The instance to be called.
+     */
+
     public void setCallbackListener(SitMarkAudioBeaconCallback callback)
     {
         this.callback = callback;
     }
 
+    /***
+     *
+     * Register a log file.
+     *
+     * @param logFile   Log file name.
+     */
+
     public void setLogFile(String logFile)
     {
         this.logFile = logFile;
     }
+
+    /***
+     * Start listening thread.
+     */
 
     public void onStartListening()
     {
@@ -81,11 +113,19 @@ public class SitMarkAudioBeaconListener
         openMics();
     }
 
+    /***
+     * Stop listening thread.
+     */
+
     public void onStopListening()
     {
         closeMics();
         closeLog();
     }
+
+    /***
+     * Open log.
+     */
 
     private void openLog()
     {
@@ -111,6 +151,10 @@ public class SitMarkAudioBeaconListener
         }
     }
 
+    /***
+     * Close log.
+     */
+
     private void closeLog()
     {
         if (logStream != null)
@@ -127,6 +171,10 @@ public class SitMarkAudioBeaconListener
             logFile = null;
         }
     }
+
+    /***
+     * Open microphone setup.
+     */
 
     private void openMics()
     {
@@ -189,6 +237,10 @@ public class SitMarkAudioBeaconListener
         }
     }
 
+    /***
+     * Close microphone setup.
+     */
+
     private void closeMics()
     {
         if (isListening)
@@ -217,6 +269,10 @@ public class SitMarkAudioBeaconListener
             isListening = false;
         }
     }
+
+    /***
+     * Recorder thread working class.
+     */
 
     private class RecorderThread extends Thread
     {
@@ -273,11 +329,11 @@ public class SitMarkAudioBeaconListener
                 //SitMarkAudioBeaconHelpers.maskNoiseBits(thisBuffer, numChannels, 2);
                 //SitMarkAudioBeaconHelpers.multiplyAmplitude(thisBuffer, numChannels, 0.1f);
 
-                int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
-                int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);
-                int HFsamp = SitMarkAudioBeaconHelpers.getNUMHFSamples(thisBuffer, numChannels);
+                //int avgAmp = SitMarkAudioBeaconHelpers.getAVGAmplitude(thisBuffer, numChannels);
+                //int maxAmp = SitMarkAudioBeaconHelpers.getMAXAmplitude(thisBuffer, numChannels);
+                //int HFsamp = SitMarkAudioBeaconHelpers.getNUMHFSamples(thisBuffer, numChannels);
 
-                Log.d(LOGTAG, "RecorderThread: avgAmp=" + avgAmp + " maxAmp=" + maxAmp + " HFsamp=" + HFsamp);
+                //Log.d(LOGTAG, "RecorderThread: avgAmp=" + avgAmp + " maxAmp=" + maxAmp + " HFsamp=" + HFsamp);
 
                 for (int channel = 0; channel < numChannels; channel++)
                 {
@@ -352,7 +408,7 @@ public class SitMarkAudioBeaconListener
 
                         char[] message = new char[ 32 ];
                         double acconfidence = detectors[ channel ].getAccumulatedMessage(message);
-                        String beacon = detectors[ channel ].getDecodedBeacon(message);
+                        String beacon = detectors[ channel ].getDecodedMessage(message);
 
                         Log.d(LOGTAG, "RecorderThread: channel=" + channel + " beacon=" + beacon);
 

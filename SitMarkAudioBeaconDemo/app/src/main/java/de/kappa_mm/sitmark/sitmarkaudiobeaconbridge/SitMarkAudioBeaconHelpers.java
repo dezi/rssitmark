@@ -1,9 +1,6 @@
 package de.kappa_mm.sitmark.sitmarkaudiobeaconbridge;
 
 import android.app.Activity;
-import android.content.Context;
-import android.net.DhcpInfo;
-import android.net.wifi.WifiManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -12,9 +9,21 @@ import java.io.FileReader;
 import java.util.HashSet;
 import java.util.Set;
 
+//
+// Helper methods.
+//
+
+@SuppressWarnings("unused")
 public class SitMarkAudioBeaconHelpers
 {
     private static final String LOGTAG = SitMarkAudioBeaconHelpers.class.getSimpleName();
+
+    /***
+     *
+     * Try to retrieve architecture of loaded SITMarkAudio libs.
+     *
+     * @return Architecture string.
+     */
 
     public static String findLibrariesArchitecture()
     {
@@ -22,7 +31,7 @@ public class SitMarkAudioBeaconHelpers
 
         try
         {
-            Set<String> libs = new HashSet<String>();
+            Set<String> libs = new HashSet<>();
             String mapsFile = "/proc/" + android.os.Process.myPid() + "/maps";
             BufferedReader reader = new BufferedReader(new FileReader(mapsFile));
             String line;
@@ -51,28 +60,13 @@ public class SitMarkAudioBeaconHelpers
         return arch;
     }
 
-    public static String getWifiIPAddress(Context context)
-    {
-        try
-        {
-            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-
-            DhcpInfo dhcpInfo = wifiManager.getDhcpInfo();
-
-            int ip = dhcpInfo.ipAddress;
-
-            if (ip != 0)
-            {
-                return (ip & 0xff) + "." + ((ip >> 8) & 0xff) + "." +
-                        ((ip >> 16) & 0xff) + "." + ((ip >> 24) & 0xff);
-            }
-        }
-        catch (Exception ignore)
-        {
-        }
-
-        return null;
-    }
+    /***
+     *
+     * Retrieve screen with in pixels.
+     *
+     * @param activity  Active activity.
+     * @return          Width in pixels.
+     */
 
     public static int getScreenWidth(Activity activity)
     {
@@ -80,6 +74,15 @@ public class SitMarkAudioBeaconHelpers
         activity.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         return displaymetrics.widthPixels;
     }
+
+    /***
+     *
+     * Compute average amplitude of raw audio buffer samples.
+     *
+     * @param audio         Raw audio buffer in PCM16LE format.
+     * @param numChannels   Number of channels in buffer.
+     * @return              Average amplitude.
+     */
 
     public static int getAVGAmplitude(byte[] audio, int numChannels)
     {
@@ -112,6 +115,15 @@ public class SitMarkAudioBeaconHelpers
         return avg / numChannels;
     }
 
+    /***
+     *
+     * Compute peak amplitude of raw audio buffer samples.
+     *
+     * @param audio         Raw audio buffer in PCM16LE format.
+     * @param numChannels   Number of channels in buffer.
+     * @return              Peak amplitude.
+     */
+
     public static int getMAXAmplitude(byte[] audio, int numChannels)
     {
         int[] maxis = new int[ 2 ];
@@ -131,8 +143,6 @@ public class SitMarkAudioBeaconHelpers
             }
         }
 
-        int samplesPerChannel = audio.length / (2 * numChannels);
-
         int max = 0;
 
         for (int channel = 0; channel < numChannels; channel++)
@@ -142,6 +152,15 @@ public class SitMarkAudioBeaconHelpers
 
         return max;
     }
+
+    /***
+     *
+     * Compute number of high frequency samples of raw audio buffer samples.
+     *
+     * @param audio         Raw audio buffer in PCM16LE format.
+     * @param numChannels   Number of channels in buffer.
+     * @return              Number of HF samples.
+     */
 
     public static int getNUMHFSamples(byte[] audio, int numChannels)
     {
@@ -192,6 +211,15 @@ public class SitMarkAudioBeaconHelpers
         return avg / numChannels;
     }
 
+    /***
+     *
+     * Adjust amplitude of raw audio buffer samples.
+     *
+     * @param audio         Raw audio buffer in PCM16LE format.
+     * @param numChannels   Number of channels in buffer.
+     * @param factor        Multiplier.
+     */
+
     public static void multiplyAmplitude(byte[] audio, int numChannels, float factor)
     {
         short value;
@@ -212,6 +240,15 @@ public class SitMarkAudioBeaconHelpers
             }
         }
     }
+
+    /***
+     *
+     * Mask least significant bits of raw audio buffer.
+     *
+     * @param audio         Raw audio buffer in PCM16LE format.
+     * @param numChannels   Number of channels in buffer.
+     * @param bits          Number of bits to mask out.
+     */
 
     public static void maskNoiseBits(byte[] audio, int numChannels, int bits)
     {
