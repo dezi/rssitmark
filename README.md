@@ -48,5 +48,5 @@ A sample activity class is contained in
 
     .../app/src/main/java/de/kappa_mm/sitmark/sitmarkaudiobeacondemo
 
-You can simple pull and compile the whole project to see, how it works.
+You can simply pull and compile the whole project to see how it works.
 
