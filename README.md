@@ -41,3 +41,12 @@ Make sure, the contents of
     .../app/CMakeLists.txt
 
 is integrated with Your local CMakeLists.txt if You have already native parts in Your app, or the complete file is copied to the corresponding location.
+
+# Sample Activity
+
+A sample activity class is contained in
+
+    .../app/src/main/java/de/kappa_mm/sitmark/sitmarkaudiobeacondemo
+
+You can simple pull and compile the whole project to see, how it works.
+
